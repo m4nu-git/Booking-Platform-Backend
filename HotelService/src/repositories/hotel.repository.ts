@@ -61,7 +61,12 @@ export async function softDeleteHotel(id: number) {
 }
 
 export async function updateHotel(id: number, hotelData: createHotelDTO) {
-  const hotel = await Hotel.findByPk(id);
+  const hotel = await Hotel.findOne({
+    where: {
+      id: id,
+      deletedAt: null,
+    },
+  });
 
   if (!hotel) {
     logger.error(`Hotel not found: ${id}`);
