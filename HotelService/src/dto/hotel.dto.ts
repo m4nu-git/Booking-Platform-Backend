@@ -5,3 +5,6 @@ export type createHotelDTO = {
   rating?: number;
   ratingCount?: number;
 };
+
+
+//simultaneous@&#2824
