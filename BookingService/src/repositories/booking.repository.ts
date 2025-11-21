@@ -26,12 +26,9 @@ export async function createIdempotencyKey(key: string, bookingId: number) {
 }
 
 export async function getIdempotencyKeyWithLock(tx: Prisma.TransactionClient, key: string) {
-    console.log(`Acquiring lock for idempotency key:`, key)
     if (!isValidUUID(key)) {
         throw new BadRequestError("Invalid idempotency key format");
     }
-
-    console.log(`SELECT * from IdempotencyKey WHERE idemKey = '${key}' FOR UPDATE;`)
 
     const idempotencyKey: Array<IdempotencyKey> = await tx.$queryRaw(
         Prisma.raw(`SELECT * from IdempotencyKey WHERE idemKey = '${key}' FOR UPDATE;`)

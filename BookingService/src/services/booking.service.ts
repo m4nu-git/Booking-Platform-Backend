@@ -1,15 +1,22 @@
 import { CreateBookingDTO } from "../dto/booking.dto";
 import { confirmBooking, createBooking, createIdempotencyKey, finalizeIdempotencyKey, getIdempotencyKeyWithLock } from "../repositories/booking.repository";
-import { BadRequestError, NotFoundError } from "../utils/errors/app.error";
+import { BadRequestError, InternalServerError, NotFoundError } from "../utils/errors/app.error";
 import { generateIdempotencyKey } from "../utils/generateIdempotencyKey";
 
 import prismaClient from '../prisma/client';
+import { serverConfig } from "../config";
+import { redlock } from "../config/redis.config";
 
 
 export async function createBookingService(
     createBookingDTO: CreateBookingDTO
 ) {
-    const booking = await createBooking({
+    const ttl = serverConfig.LOCK_TTL;
+    const bookingResource = `hotel:${createBookingDTO.hotelId}`;
+
+    try {
+        await redlock.acquire([bookingResource], ttl);
+        const booking = await createBooking({
         userId: createBookingDTO.userId,
         hotelId: createBookingDTO.hotelId,
         totalGuests: createBookingDTO.totalGuests,
@@ -24,10 +31,12 @@ export async function createBookingService(
         bookingId: booking.id,
         idempotencyKey: idempotencyKey
     }
+    } catch (error) {
+        throw new InternalServerError(`Failed to acquire lock for booking resource`);
+    }
 }
 
 
-//Todo: explore the function for potential issues and improvement
 export async function confirmBookingService(idempotencyKey: string) {
     return await prismaClient.$transaction( async (tx) => {
         const idempotencyKeyData = await getIdempotencyKeyWithLock(tx, idempotencyKey);
