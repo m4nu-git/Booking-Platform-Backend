@@ -33,7 +33,7 @@ app.listen(serverConfig.PORT, () => {
 
     for (let i = 0; i < 10; i++) {
         addEmailToQueue({
-            to: `sample from booking ${1}`,
+            to: `sample from booking ${i}`,
             subject: "Sample Email booking",
             templateId: "sample-template",
             params: {
