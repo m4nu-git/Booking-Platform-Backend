@@ -10,9 +10,23 @@ type Config struct {
 	Addr string
 }
 
+func NewConfig(addr string) Config {
+	return Config{
+		Addr: addr,
+	}
+}
+
+
 type Application struct {
 	Config Config
 }
+
+func NewApplication(cfg Config) *Application {
+	return &Application{
+		Config: cfg,
+	}
+}
+
 
 func (app *Application) Run() error {
 	server := &http.Server{
