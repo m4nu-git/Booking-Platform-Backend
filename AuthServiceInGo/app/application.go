@@ -16,9 +16,7 @@ type Config struct {
 }
 
 func NewConfig() Config {
-
 	port := config.GetString("PORT", ":8080")
-
 	return Config{
 		Addr: port,
 	}
@@ -27,13 +25,11 @@ func NewConfig() Config {
 
 type Application struct {
 	Config Config
-	Store  db.Storage
 }
 
 func NewApplication(cfg Config) *Application {
 	return &Application{
 		Config: cfg,
-		Store:  *db.NewStorage(),
 	}
 }
 
