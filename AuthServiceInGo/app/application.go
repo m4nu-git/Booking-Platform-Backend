@@ -1,9 +1,10 @@
 package app
 
 import (
+	dbConfig "AuthServiceInGo/config/db"
 	config "AuthServiceInGo/config/env"
 	"AuthServiceInGo/controllers"
-	db "AuthServiceInGo/db/repositories"
+	repo "AuthServiceInGo/db/repositories"
 	"AuthServiceInGo/router"
 	"AuthServiceInGo/services"
 	"fmt"
@@ -11,8 +12,9 @@ import (
 	"time"
 )
 
+// Config holds the configuration for the server.
 type Config struct {
-	Addr string
+	Addr string // port
 }
 
 func NewConfig() Config {
@@ -36,7 +38,14 @@ func NewApplication(cfg Config) *Application {
 
 func (app *Application) Run() error {
 
-	ur := db.NewUserRespository()
+	db, err := dbConfig.SetupDB()
+
+	if err != nil {
+		fmt.Println("Error setting up database:", err)
+		return err
+	}
+
+	ur := repo.NewUserRespository(db)
 	us := services.NewUserService(ur)
 	uc := controllers.NewUserController(us)
 	uRouter := router.NewUserRouter(uc)
@@ -45,8 +54,8 @@ func (app *Application) Run() error {
 	server := &http.Server{
 		Addr: app.Config.Addr,
 		Handler: router.SetupRouter(uRouter), // TODO: Setup a chi router and put it here
-		ReadTimeout: 10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout: 10 * time.Second, // Set read timeout to 10 seconds
+		WriteTimeout: 10 * time.Second, // Set write timeout to 10 seconds
 	}
 
 	fmt.Println("Starting server on", app.Config.Addr)
