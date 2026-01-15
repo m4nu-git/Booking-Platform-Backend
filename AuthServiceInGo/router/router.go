@@ -11,7 +11,7 @@ type Router interface {
 	Register(r chi.Router)
 }
 
-func SetupRouter(UserRouter Router) *chi.Mux {
+func SetupRouter(UserRouter Router, RoleRouter Router) *chi.Mux {
 
 	chiRouter := chi.NewRouter()
 
@@ -23,6 +23,7 @@ func SetupRouter(UserRouter Router) *chi.Mux {
 	chiRouter.Get("/ping", controllers.PingHandlers)
 
 	UserRouter.Register(chiRouter)
+	RoleRouter.Register(chiRouter)
 
 	return chiRouter
 }
