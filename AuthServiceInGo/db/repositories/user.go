@@ -132,7 +132,7 @@ func (u *UserRepositoryImpl) GetByID(id string) (*models.User, error) {
 	query := "SELECT id, username, email, created_at, updated_at FROM users WHERE id = ?"
 
 	// Step 2: Execute the query
-	row := u.db.QueryRow(query, 1)
+	row := u.db.QueryRow(query, id)
 
 	// Step 3: Process the result
 	user := &models.User{}
