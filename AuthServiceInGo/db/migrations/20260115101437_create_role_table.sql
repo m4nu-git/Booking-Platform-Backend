@@ -13,7 +13,6 @@ INSERT INTO roles (name, description) VALUES
 ('user', 'Regular user with limited access'),
 ('moderator', 'Moderator with elevated privileges');
 
-
 -- +goose StatementEnd
 
 -- +goose Down
