@@ -4,7 +4,7 @@ module.exports = {
   async up (queryInterface: QueryInterface) {
     await queryInterface.bulkInsert('hotels', [
       {
-        id: 1,
+        id: 8,
         name: 'Ocean View Hotel',
         address: '123 Beachside Lane',
         location: 'Goa',
@@ -13,7 +13,7 @@ module.exports = {
         deleted_at: null,
       },
       {
-        id: 2,
+        id: 9,
         name: 'Mountain Retreat',
         address: '456 Hilltop Road',
         location: 'Manali',
