@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// TODO: Extend the controller to take req schema and decide whether it wants a sync and async flow 
 export const RoomGenerationRequestSchema = z.object({
     roomCategoryId: z.number().positive(),
     startDate: z.string().datetime(),
