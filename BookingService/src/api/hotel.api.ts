@@ -1,0 +1,22 @@
+import axios from 'axios';
+import { serverConfig } from '../config';
+
+export const getAvailableRooms = async (roomCategoryId: number, checkInDate: string, checkOutDate: string) => {
+    const response = await axios.get(`${serverConfig.HOTEL_SERVICE_URL}/rooms/available`, {
+        params: {
+            roomCategoryId,
+            checkInDate,
+            checkOutDate
+        }
+    })
+    return response.data;
+}
+
+export const updateBookingIdToRooms = async (bookingId: number, roomIds: number[]) => {
+    const response = await axios.put(`${serverConfig.HOTEL_SERVICE_URL}/rooms/update-booking-ids`, {
+        bookingId,
+        roomIds
+    });
+
+    return response.data;
+}

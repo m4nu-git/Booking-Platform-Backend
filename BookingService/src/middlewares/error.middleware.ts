@@ -5,6 +5,10 @@ export const appErrorHandler = (err: AppError, req: Request, res: Response, next
 
     console.log(err);
 
+    if (!err.statusCode) {
+        return next(err);
+    }
+
     res.status(err.statusCode).json({
         success: false,
         message: err.message
