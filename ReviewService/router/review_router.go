@@ -19,4 +19,13 @@ func NewReviewRouter(_reviewController *controllers.ReviewController) Router {
 
 func (rr *ReviewRouter) Register(r chi.Router) {
 	r.With(middlewares.ReviewCreateRequestValidator).Post("/reviews", rr.reviewController.CreateReview)
+	r.Get("/reviews", rr.reviewController.GetAllReviews)
+	r.Get("/reviews/{id}", rr.reviewController.GetReviewById)
+	r.With(middlewares.ReviewUpdateRequestValidator).Put("/reviews/{id}", rr.reviewController.UpdateReview)
+	r.Delete("/reviews/{id}", rr.reviewController.DeleteReview)
+
+	// Filter operations
+	r.Get("/reviews/user", rr.reviewController.GetReviewsByUserId)
+	r.Get("/reviews/hotel", rr.reviewController.GetReviewsByHotelId)
+	r.Get("/reviews/booking", rr.reviewController.GetReviewsByBookingId)
 }
