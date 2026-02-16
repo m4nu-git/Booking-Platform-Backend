@@ -1,6 +1,8 @@
 package app
 
 import (
+	config "ReviewService/config/env"
+	"ReviewService/router"
 	"fmt"
 	"net/http"
 	"time"
@@ -14,9 +16,12 @@ type Application struct {
 	Config Config
 }
 
-func NewConfig(addr string) Config {
+func NewConfig() Config {
+
+	port := config.GetString("PORT", ":5555")
+
 	return Config{
-		Addr: addr,
+		Addr: port,
 	}
 }
 
@@ -30,7 +35,7 @@ func (app *Application) Run() error {
 
 	server := &http.Server{
 		Addr:         app.Config.Addr,
-		Handler:      nil,
+		Handler:      router.SetupRouter(),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
