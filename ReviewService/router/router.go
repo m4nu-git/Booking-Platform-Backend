@@ -1,16 +1,25 @@
 package router
 
 import (
-	"ReviewService/controller"
+	"ReviewService/controllers"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-func SetupRouter() *chi.Mux {
+type Router interface {
+	Register(r chi.Router)
+}
 
-	router := chi.NewRouter()
+func SetupRouter(ReviewRouter Router) *chi.Mux {
 
-	router.Get("/ping", controller.PingHandler)
+	chiRouter := chi.NewRouter()
 
-	return router
+	chiRouter.Use(middleware.Logger)
+
+	chiRouter.Get("/ping", controllers.PingHandler)
+
+	ReviewRouter.Register(chiRouter)
+
+	return chiRouter
 }
