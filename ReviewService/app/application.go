@@ -1,10 +1,12 @@
 package app
 
 import (
+	client "ReviewService/client"
 	dbConfig "ReviewService/config/db"
 	config "ReviewService/config/env"
-	repo "ReviewService/db/repositories"
 	"ReviewService/controllers"
+	cronjob "ReviewService/cronJob"
+	repo "ReviewService/db/repositories"
 	"ReviewService/router"
 	"ReviewService/services"
 	"fmt"
@@ -56,7 +58,17 @@ func (app *Application) Run() error {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	fmt.Println("Starting server on", app.Config.Addr)
+	fmt.Println("Starting Review Service on", app.Config.Addr)
+
+	// Create dependent Services
+
+	repository := repo.NewReviewAggregateRatingRepository(db)
+	hotelClient := client.NewHotelClient(config.GetString("HOTEL_SERVICE_URL", "http://localhost:3000/api/v1"))
+	svc := services.NewReviewBatchProcessor(db, repository, hotelClient)
+
+	// start cron job
+	mode := config.GetString("APP_MODE", "test")
+	cronjob.StartCron(svc, mode)
 
 	return server.ListenAndServe()
 }
