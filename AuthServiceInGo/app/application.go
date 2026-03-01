@@ -47,16 +47,20 @@ func (app *Application) Run() error {
 	rr := repo.NewRoleRepository(db)
 	rpr := repo.NewRolePermissionRepository(db)
 	urr := repo.NewUserRoleRepository(db)
+	pr := repo.NewPermissionRepository(db)
 	us := services.NewUserService(ur, rr, urr)
 	rs := services.NewRoleService(rr, rpr, urr)
+	ps := services.NewPermissionService(pr)
 	uc := controllers.NewUserController(us)
 	rc := controllers.NewRoleController(rs)
+	pc := controllers.NewPermissionController(ps)
 	uRouter := router.NewUserRouter(uc)
 	rRouter := router.NewRoleRouter(rc)
+	pRouter := router.NewPermissionRouter(pc)
 
 	server := &http.Server{
 		Addr:         app.Config.Addr,
-		Handler:      router.SetupRouter(uRouter, rRouter), // TODO: Setup a chi router and put it here
+		Handler:      router.SetupRouter(uRouter, rRouter, pRouter),
 		ReadTimeout:  10 * time.Second,                     // Set read timeout to 10 seconds
 		WriteTimeout: 10 * time.Second,                     // Set write timeout to 10 seconds
 	}

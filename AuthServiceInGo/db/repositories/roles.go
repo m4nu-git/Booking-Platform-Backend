@@ -83,11 +83,9 @@ func (r *RoleRepositoryImpl) CreateRole(name string, description string) (*model
 	}
 
 	return &models.Role{
-			Id:          id,
+			BaseModel:   models.BaseModel{Id: id},
 			Name:        name,
 			Description: description,
-			CreatedAt:   "", // Will be set by the database
-			UpdatedAt:   "", // Will be set by the database
 		},
 		nil
 }
@@ -118,10 +116,8 @@ func (r *RoleRepositoryImpl) UpdateRole(id int64, name string, description strin
 	}
 
 	return &models.Role{
-		Id:          id,
+		BaseModel:   models.BaseModel{Id: id},
 		Name:        name,
 		Description: description,
-		CreatedAt:   "", // Will be set by the database
-		UpdatedAt:   "", // Will be set by the database
 	}, nil
 }

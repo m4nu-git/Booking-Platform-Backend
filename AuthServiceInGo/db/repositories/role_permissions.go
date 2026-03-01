@@ -71,11 +71,9 @@ func (rp *RolePermissionRepositoryImpl) AddPermissionToRole(roleId int64, permis
 	}
 
 	return &models.RolePermission{
-		Id:           id,
+		BaseModel:    models.BaseModel{Id: id},
 		RoleId:       roleId,
 		PermissionId: permissionId,
-		CreatedAt:    "NOW()",
-		UpdatedAt:    "NOW()",
 	}, nil
 }
 

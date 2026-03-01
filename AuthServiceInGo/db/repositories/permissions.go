@@ -83,13 +83,11 @@ func (p *PermissionRepositoryImpl) CreatePermission(name string, description str
 	}
 
 	return &models.Permission{
-		Id:          id,
+		BaseModel:   models.BaseModel{Id: id},
 		Name:        name,
 		Description: description,
 		Resource:    resource,
 		Action:      action,
-		CreatedAt:   "NOW()",
-		UpdatedAt:   "NOW()",
 	}, nil
 }
 
@@ -116,12 +114,10 @@ func (p *PermissionRepositoryImpl) UpdatePermission(id int64, name string, descr
 	}
 
 	return &models.Permission{
-		Id:          id,
+		BaseModel:   models.BaseModel{Id: id},
 		Name:        name,
 		Description: description,
 		Resource:    resource,
 		Action:      action,
-		CreatedAt:   "", // Will be set by the database
-		UpdatedAt:   "", // Will be set by the database
 	}, nil
 }
