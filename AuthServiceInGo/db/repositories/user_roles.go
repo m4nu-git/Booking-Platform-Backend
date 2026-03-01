@@ -144,13 +144,12 @@ func (u *UserRoleRepositoryImpl) HasAllRoles(userId int64, roleNames []string) (
 	placeholders = placeholders[:len(placeholders)-1]
 	
 	query := fmt.Sprintf(`
-		SELECT COUNT(DISTINCT r.name) = ?
+		SELECT COUNT(DISTINCT r.name)
 		FROM user_roles ur
 		INNER JOIN roles r ON ur.role_id = r.id
 		WHERE ur.user_id = ? AND r.name IN (%s)`, placeholders)
 
-	args := make([]interface{}, 0, 2+len(roleNames))
-	args = append(args, len(roleNames))
+	args := make([]interface{}, 0, 1+len(roleNames))
 	args = append(args, userId)
 	for _, roleName := range roleNames {
 		args = append(args, roleName)
@@ -158,15 +157,15 @@ func (u *UserRoleRepositoryImpl) HasAllRoles(userId int64, roleNames []string) (
 
 	row := u.db.QueryRow(query, args...)
 
-	var hasAllRoles bool
-	if err := row.Scan(&hasAllRoles); err != nil {
+	var count int
+	if err := row.Scan(&count); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil // No roles found for the user
 		}
 		return false, err // Return any other error
 	}
 
-	return hasAllRoles, nil
+	return count == len(roleNames), nil
 }
 
 func (u *UserRoleRepositoryImpl) HasAnyRole(userId int64, roleNames []string) (bool, error) {

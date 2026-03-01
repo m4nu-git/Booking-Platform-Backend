@@ -4,6 +4,7 @@ import (
 	"AuthServiceInGo/models"
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 type UserRepository interface {
@@ -12,14 +13,14 @@ type UserRepository interface {
 	GetByEmail(email string) (*models.User, error)
 	GetAll() ([]*models.User, error)
 	DeleteByID(id int64) error
+	UpdateByID(id int64, user *models.User) (*models.User, error)
 }
-
 
 type UserRepositoryImpl struct {
 	db *sql.DB
 }
 
-func NewUserRespository(_db *sql.DB) UserRepository {
+func NewUserRepository(_db *sql.DB) UserRepository {
 	return &UserRepositoryImpl{
 		db: _db,
 	}
@@ -52,6 +53,34 @@ func (u *UserRepositoryImpl) GetAll() ([]*models.User, error) {
 	return users, nil
 }
 
+func (u *UserRepositoryImpl) UpdateByID(id int64, user *models.User) (*models.User, error) {
+	query := "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?"
+	result, err := u.db.Exec(query, user.Username, user.Email, user.Password, id)
+
+	if err != nil {
+		fmt.Println("Error Updating user:", err)
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		fmt.Println("Error fetching rows affected:", err)
+		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		fmt.Println("No user updated with given Id")
+		return nil, fmt.Errorf("No user updated!")
+	}
+
+	updatedUser := &models.User{
+		Username: user.Username,
+		Email:    user.Email,
+		Password: user.Password,
+	}
+
+	return updatedUser, nil
+}
 
 func (u *UserRepositoryImpl) DeleteByID(id int64) error {
 	query := "DELETE FROM users WHERE id = ?"
@@ -100,30 +129,29 @@ func (u *UserRepositoryImpl) GetByEmail(email string) (*models.User, error) {
 func (u *UserRepositoryImpl) Create(username string, email string, hashedPassword string) (*models.User, error) {
 	query := "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
 	result, err := u.db.Exec(query, username, email, hashedPassword)
-
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return nil, err
 	}
 
-	lastInsertID, rowErr := result.LastInsertId()
-
-	if rowErr != nil {
-		fmt.Println("Error getting last insert ID:", rowErr)
-		return nil, rowErr
+	lastInsertID, err := result.LastInsertId()
+	if err != nil {
+		fmt.Println("Error getting last insert ID:", err)
+		return nil, err
 	}
+
+	log.Printf("User inserted with ID: %d", lastInsertID)
 
 	user := &models.User{
-		Id:			lastInsertID,
-		Username:   username,
-		Email:      email,
+		Id:       lastInsertID,
+		Username: username,
+		Email:    email,
 	}
 
-	fmt.Println("User created successfully:", user)
+	fmt.Println("User row created successfully:", user)
 
 	return user, nil
 }
-
 
 func (u *UserRepositoryImpl) GetByID(id string) (*models.User, error) {
 	fmt.Println("Fetching user in UserRepository")

@@ -11,21 +11,35 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-
 type UserService interface {
+	GetAllUserService() ([]*models.User, error)
 	GetUserById(id string) (*models.User, error)
 	CreateUser(payload *dto.CreateUserRequestDTO) (*models.User, error)
 	LoginUser(payload *dto.LoginUserRequestDTO) (string, error)
 }
 
 type UserServiceImpl struct {
-	userRepository db.UserRepository
+	userRepository     db.UserRepository
+	roleRepository     db.RoleRepository
+	userRoleRepository db.UserRoleRepository
 }
 
-func NewUserService(_userRepository db.UserRepository) UserService {
+func NewUserService(_userRepository db.UserRepository, _roleRepository db.RoleRepository, _userRoleRepository db.UserRoleRepository) UserService {
 	return &UserServiceImpl{
-		userRepository: _userRepository,
+		userRepository:     _userRepository,
+		roleRepository:     _roleRepository,
+		userRoleRepository: _userRoleRepository,
 	}
+}
+
+func (u *UserServiceImpl) GetAllUserService() ([]*models.User, error) {
+	fmt.Println("Fetching All User from Service Layer")
+	users, err := u.userRepository.GetAll()
+	if err != nil {
+		fmt.Println("Got error while fetching user from service layer", err)
+		return nil, err
+	}
+	return users, nil
 }
 
 func (u *UserServiceImpl) GetUserById(id string) (*models.User, error) {
@@ -48,14 +62,28 @@ func (u *UserServiceImpl) CreateUser(payload *dto.CreateUserRequestDTO) (*models
 		return nil, err
 	}
 
-	// Step 2. Call the repository to create the user
+	// Step 2. Call the repository to create the user (pure insert)
 	user, err := u.userRepository.Create(payload.Username, payload.Email, hashedPassword)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return nil, err
 	}
 
-	// Step 3. Return the created user
+	// Step 3. Assign the default "user" role via RoleRepository + UserRoleRepository
+	role, err := u.roleRepository.GetRoleByName("user")
+	if err != nil {
+		fmt.Println("Error fetching default role:", err)
+		return nil, fmt.Errorf("failed to find default role 'user': %w", err)
+	}
+
+	if err := u.userRoleRepository.AssignRoleToUser(user.Id, role.Id); err != nil {
+		fmt.Println("Error assigning role to user:", err)
+		return nil, fmt.Errorf("failed to assign role to user: %w", err)
+	}
+
+	fmt.Printf("User created successfully with default role '%s': %+v\n", role.Name, user)
+
+	// Step 4. Return the created user
 	return user, nil
 }
 

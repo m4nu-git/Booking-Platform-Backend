@@ -81,7 +81,7 @@ func RequireAllRoles(roles ...string) func(http.Handler) http.Handler {
 
 			dbConn, dbErr := dbConfig.SetupDB()
 			if dbErr != nil {
-				http.Error(w, "Database connection error: " + dbErr.Error(), http.StatusInternalServerError)
+				http.Error(w, "Database connection error: "+dbErr.Error(), http.StatusInternalServerError)
 				return
 			}
 
@@ -90,13 +90,13 @@ func RequireAllRoles(roles ...string) func(http.Handler) http.Handler {
 			hasAllRoles, hasAllRolesErr := urr.HasAllRoles(userId, roles)
 			fmt.Println("userId", userId, "roles", roles, "hasAllRoles", hasAllRoles)
 			if hasAllRolesErr != nil {
-				http.Error(w, "Error checking user roles: " + hasAllRolesErr.Error(), http.StatusInternalServerError)
-				return 
+				http.Error(w, "Error checking user roles: "+hasAllRolesErr.Error(), http.StatusInternalServerError)
+				return
 			}
 
 			if !hasAllRoles {
 				http.Error(w, "Forbidden: You do not have the required roles: ", http.StatusForbidden)
-				return 
+				return
 			}
 
 			fmt.Println("User has all required roles:", roles)
@@ -105,7 +105,6 @@ func RequireAllRoles(roles ...string) func(http.Handler) http.Handler {
 		})
 	}
 }
-
 
 func RequireAnyRole(roles ...string) func(http.Handler) http.Handler {
 

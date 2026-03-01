@@ -24,7 +24,6 @@ func NewConfig() Config {
 	}
 }
 
-
 type Application struct {
 	Config Config
 }
@@ -35,7 +34,6 @@ func NewApplication(cfg Config) *Application {
 	}
 }
 
-
 func (app *Application) Run() error {
 
 	db, err := dbConfig.SetupDB()
@@ -45,23 +43,22 @@ func (app *Application) Run() error {
 		return err
 	}
 
-	ur := repo.NewUserRespository(db)
+	ur := repo.NewUserRepository(db)
 	rr := repo.NewRoleRepository(db)
 	rpr := repo.NewRolePermissionRepository(db)
 	urr := repo.NewUserRoleRepository(db)
-	us := services.NewUserService(ur)
+	us := services.NewUserService(ur, rr, urr)
 	rs := services.NewRoleService(rr, rpr, urr)
 	uc := controllers.NewUserController(us)
 	rc := controllers.NewRoleController(rs)
 	uRouter := router.NewUserRouter(uc)
 	rRouter := router.NewRoleRouter(rc)
 
-
 	server := &http.Server{
-		Addr: app.Config.Addr,
-		Handler: router.SetupRouter(uRouter, rRouter), // TODO: Setup a chi router and put it here
-		ReadTimeout: 10 * time.Second, // Set read timeout to 10 seconds
-		WriteTimeout: 10 * time.Second, // Set write timeout to 10 seconds
+		Addr:         app.Config.Addr,
+		Handler:      router.SetupRouter(uRouter, rRouter), // TODO: Setup a chi router and put it here
+		ReadTimeout:  10 * time.Second,                     // Set read timeout to 10 seconds
+		WriteTimeout: 10 * time.Second,                     // Set write timeout to 10 seconds
 	}
 
 	fmt.Println("Starting server on", app.Config.Addr)

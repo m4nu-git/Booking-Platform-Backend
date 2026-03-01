@@ -83,12 +83,13 @@ func (r *RoleRepositoryImpl) CreateRole(name string, description string) (*model
 	}
 
 	return &models.Role{
-		Id:          id,
-		Name:        name,
-		Description: description,
-		CreatedAt:   "", // Will be set by the database
-		UpdatedAt:   "", // Will be set by the database
-	}, nil
+			Id:          id,
+			Name:        name,
+			Description: description,
+			CreatedAt:   "", // Will be set by the database
+			UpdatedAt:   "", // Will be set by the database
+		},
+		nil
 }
 
 func (r *RoleRepositoryImpl) DeleteRoleById(id int64) error {
