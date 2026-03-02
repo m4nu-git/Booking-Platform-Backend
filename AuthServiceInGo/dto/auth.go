@@ -11,6 +11,15 @@ type CreateUserRequestDTO struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+type LoginResponseDTO struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshTokenRequestDTO struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 type RoleDTO struct {
 	Id   int64  `json:"id"`
 	Name string `json:"name"`

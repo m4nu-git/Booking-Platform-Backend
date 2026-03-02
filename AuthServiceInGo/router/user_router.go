@@ -22,4 +22,6 @@ func (ur *UserRouter) Register(r chi.Router) {
 	r.With(middlewares.UserCreateRequestValidator).Post("/signup", ur.userController.CreateUser)
 	r.With(middlewares.UserLoginRequestValidator).Post("/login", ur.userController.LoginUser)
 	r.Get("/users/{id}/roles", ur.userController.GetUserRoles)
+	r.With(middlewares.RefreshTokenRequestValidator).Post("/refresh", ur.userController.RefreshToken)
+	r.With(middlewares.RefreshTokenRequestValidator).Post("/logout", ur.userController.Logout)
 }

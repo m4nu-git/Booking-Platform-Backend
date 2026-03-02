@@ -6,7 +6,11 @@ import (
 	"AuthServiceInGo/dto"
 	"AuthServiceInGo/models"
 	"AuthServiceInGo/utils"
+	"crypto/rand"
+	"database/sql"
+	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -15,21 +19,30 @@ type UserService interface {
 	GetAllUserService() ([]*models.User, error)
 	GetUserById(id string) (*models.User, error)
 	CreateUser(payload *dto.CreateUserRequestDTO) (*models.User, error)
-	LoginUser(payload *dto.LoginUserRequestDTO) (string, error)
+	LoginUser(payload *dto.LoginUserRequestDTO) (*dto.LoginResponseDTO, error)
 	GetUserRoles(userId int64) ([]*models.Role, error)
+	RefreshAccessToken(refreshToken string) (string, error)
+	Logout(refreshToken string) error
 }
 
 type UserServiceImpl struct {
-	userRepository     db.UserRepository
-	roleRepository     db.RoleRepository
-	userRoleRepository db.UserRoleRepository
+	userRepository         db.UserRepository
+	roleRepository         db.RoleRepository
+	userRoleRepository     db.UserRoleRepository
+	refreshTokenRepository db.RefreshTokenRepository
 }
 
-func NewUserService(_userRepository db.UserRepository, _roleRepository db.RoleRepository, _userRoleRepository db.UserRoleRepository) UserService {
+func NewUserService(
+	_userRepository db.UserRepository,
+	_roleRepository db.RoleRepository,
+	_userRoleRepository db.UserRoleRepository,
+	_refreshTokenRepository db.RefreshTokenRepository,
+) UserService {
 	return &UserServiceImpl{
-		userRepository:     _userRepository,
-		roleRepository:     _roleRepository,
-		userRoleRepository: _userRoleRepository,
+		userRepository:         _userRepository,
+		roleRepository:         _roleRepository,
+		userRoleRepository:     _userRoleRepository,
+		refreshTokenRepository: _refreshTokenRepository,
 	}
 }
 
@@ -56,21 +69,18 @@ func (u *UserServiceImpl) GetUserById(id string) (*models.User, error) {
 func (u *UserServiceImpl) CreateUser(payload *dto.CreateUserRequestDTO) (*models.User, error) {
 	fmt.Println("Creating user in UserService")
 
-	// Step 1. Hash the password using utils.HashPassword
 	hashedPassword, err := utils.HashPassword(payload.Password)
 	if err != nil {
 		fmt.Println("Error hashing password:", err)
 		return nil, err
 	}
 
-	// Step 2. Call the repository to create the user (pure insert)
 	user, err := u.userRepository.Create(payload.Username, payload.Email, hashedPassword)
 	if err != nil {
 		fmt.Println("Error creating user:", err)
 		return nil, err
 	}
 
-	// Step 3. Assign the default "user" role via RoleRepository + UserRoleRepository
 	role, err := u.roleRepository.GetRoleByName("user")
 	if err != nil {
 		fmt.Println("Error fetching default role:", err)
@@ -84,7 +94,6 @@ func (u *UserServiceImpl) CreateUser(payload *dto.CreateUserRequestDTO) (*models
 
 	fmt.Printf("User created successfully with default role '%s': %+v\n", role.Name, user)
 
-	// Step 4. Return the created user
 	return user, nil
 }
 
@@ -92,49 +101,95 @@ func (u *UserServiceImpl) GetUserRoles(userId int64) ([]*models.Role, error) {
 	return u.userRoleRepository.GetUserRoles(userId)
 }
 
-func (u *UserServiceImpl) LoginUser(payload *dto.LoginUserRequestDTO) (string, error) {
-	// Pre-requisite: This function will be given email and password as parameter, which we can hardcode for now
-	email := payload.Email
-	password := payload.Password
-
-	// Step 1. Make a repository call to get the user by email
-	user, err := u.userRepository.GetByEmail(email)
-
+func (u *UserServiceImpl) LoginUser(payload *dto.LoginUserRequestDTO) (*dto.LoginResponseDTO, error) {
+	user, err := u.userRepository.GetByEmail(payload.Email)
 	if err != nil {
 		fmt.Println("Error fetching user by email:", err)
-		return "", err
+		return nil, err
 	}
 
-	// Step 2. If user exists, or not. If not exists, return error
 	if user == nil {
-		fmt.Println("No user found with the given email")
-		return "", fmt.Errorf("no user found with email: %s", email)
+		return nil, fmt.Errorf("no user found with email: %s", payload.Email)
 	}
 
-	// Step 3. If user exists, check the password using utils.CheckPasswordHash
-	isPasswordValid := utils.CheckPasswordHash(password, user.Password)
-
-	if !isPasswordValid {
-		fmt.Println("Password does not match")
-		return "", nil
+	if !utils.CheckPasswordHash(payload.Password, user.Password) {
+		return nil, fmt.Errorf("invalid credentials")
 	}
 
-	// Step 4. If password matches, print a JWT token, else return error saying password does not match
+	// Generate access token (15 min expiry)
 	jwtPayload := jwt.MapClaims{
 		"email": user.Email,
 		"id":    user.Id,
+		"exp":   time.Now().Add(15 * time.Minute).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtPayload)
+	accessToken, err := token.SignedString([]byte(env.GetString("JWT_SECRET", "TOKEN")))
+	if err != nil {
+		fmt.Println("Error signing access token:", err)
+		return nil, err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtPayload)
-
-	tokenString, err := token.SignedString([]byte(env.GetString("JWT_SECRET", "TOKEN")))
-
+	// Generate refresh token (random 32-byte hex, 7 days expiry)
+	refreshToken, err := generateRefreshToken()
 	if err != nil {
-		fmt.Println("Error signing token:", err)
+		return nil, err
+	}
+
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	if err := u.refreshTokenRepository.Create(user.Id, refreshToken, expiresAt); err != nil {
+		fmt.Println("Error storing refresh token:", err)
+		return nil, err
+	}
+
+	return &dto.LoginResponseDTO{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (u *UserServiceImpl) RefreshAccessToken(refreshToken string) (string, error) {
+	rt, err := u.refreshTokenRepository.GetByToken(refreshToken)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("invalid refresh token")
+		}
 		return "", err
 	}
 
-	fmt.Println("JWT Token:", tokenString)
+	// Check expiry
+	expiresAt, err := time.Parse("2006-01-02 15:04:05", rt.ExpiresAt)
+	if err != nil {
+		return "", fmt.Errorf("error parsing token expiry")
+	}
 
-	return tokenString, nil
+	if time.Now().After(expiresAt) {
+		u.refreshTokenRepository.DeleteByToken(refreshToken)
+		return "", fmt.Errorf("refresh token expired, please login again")
+	}
+
+	// Issue new access token
+	jwtPayload := jwt.MapClaims{
+		"id":  rt.UserId,
+		"exp": time.Now().Add(15 * time.Minute).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtPayload)
+	accessToken, err := token.SignedString([]byte(env.GetString("JWT_SECRET", "TOKEN")))
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
+func (u *UserServiceImpl) Logout(refreshToken string) error {
+	return u.refreshTokenRepository.DeleteByToken(refreshToken)
+}
+
+func generateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }

@@ -38,22 +38,42 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
-
 	fmt.Println("Logging in user in UserController")
 
 	payload := r.Context().Value("payload").(dto.LoginUserRequestDTO)
 
-	fmt.Println("Payload received:", payload)
-
-	jwtToken, err := uc.UserService.LoginUser(&payload)
-
+	loginResponse, err := uc.UserService.LoginUser(&payload)
 	if err != nil {
-		utils.WriteJsonErrorResponse(w, http.StatusInternalServerError, "Failed to login user", err)
+		utils.WriteJsonErrorResponse(w, http.StatusUnauthorized, "Failed to login user", err)
 		return
 	}
 
-	utils.WriteJsonSuccessResponse(w, http.StatusOK, "User logged in successfully", jwtToken)
+	utils.WriteJsonSuccessResponse(w, http.StatusOK, "User logged in successfully", loginResponse)
+}
 
+func (uc *UserController) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	payload := r.Context().Value("payload").(dto.RefreshTokenRequestDTO)
+
+	accessToken, err := uc.UserService.RefreshAccessToken(payload.RefreshToken)
+	if err != nil {
+		utils.WriteJsonErrorResponse(w, http.StatusUnauthorized, err.Error(), err)
+		return
+	}
+
+	utils.WriteJsonSuccessResponse(w, http.StatusOK, "Token refreshed successfully", map[string]string{
+		"access_token": accessToken,
+	})
+}
+
+func (uc *UserController) Logout(w http.ResponseWriter, r *http.Request) {
+	payload := r.Context().Value("payload").(dto.RefreshTokenRequestDTO)
+
+	if err := uc.UserService.Logout(payload.RefreshToken); err != nil {
+		utils.WriteJsonErrorResponse(w, http.StatusInternalServerError, "Failed to logout", err)
+		return
+	}
+
+	utils.WriteJsonSuccessResponse(w, http.StatusOK, "Logged out successfully", nil)
 }
 
 func (uc *UserController) GetUserRoles(w http.ResponseWriter, r *http.Request) {
