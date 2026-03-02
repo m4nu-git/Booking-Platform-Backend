@@ -57,12 +57,24 @@ func (u *UserRoleRepositoryImpl) GetUserRoles(userId int64) ([]*models.Role, err
 }
 
 func (u *UserRoleRepositoryImpl) AssignRoleToUser(userId int64, roleId int64) error {
-	query := "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)"
-	_, err := u.db.Exec(query, userId, roleId)
+	tx, err := u.db.Begin()
 	if err != nil {
 		return err
 	}
-	return nil
+
+	_, err = tx.Exec("DELETE FROM user_roles WHERE user_id = ?", userId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", userId, roleId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (u *UserRoleRepositoryImpl) RemoveRoleFromUser(userId int64, roleId int64) error {

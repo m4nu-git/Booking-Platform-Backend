@@ -16,6 +16,7 @@ type UserService interface {
 	GetUserById(id string) (*models.User, error)
 	CreateUser(payload *dto.CreateUserRequestDTO) (*models.User, error)
 	LoginUser(payload *dto.LoginUserRequestDTO) (string, error)
+	GetUserRoles(userId int64) ([]*models.Role, error)
 }
 
 type UserServiceImpl struct {
@@ -85,6 +86,10 @@ func (u *UserServiceImpl) CreateUser(payload *dto.CreateUserRequestDTO) (*models
 
 	// Step 4. Return the created user
 	return user, nil
+}
+
+func (u *UserServiceImpl) GetUserRoles(userId int64) ([]*models.Role, error) {
+	return u.userRoleRepository.GetUserRoles(userId)
 }
 
 func (u *UserServiceImpl) LoginUser(payload *dto.LoginUserRequestDTO) (string, error) {

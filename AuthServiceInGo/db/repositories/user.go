@@ -142,6 +142,21 @@ func (u *UserRepositoryImpl) Create(username string, email string, hashedPasswor
 
 	log.Printf("User inserted with ID: %d", lastInsertID)
 
+	// Get default "user" role ID
+	var roleId int64
+	err = u.db.QueryRow("SELECT id FROM roles WHERE name = ?", "user").Scan(&roleId)
+	if err != nil {
+		fmt.Println("Error fetching default role:", err)
+		return nil, err
+	}
+
+	// Assign default role to user
+	_, err = u.db.Exec("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", lastInsertID, roleId)
+	if err != nil {
+		fmt.Println("Error assigning default role to user:", err)
+		return nil, err
+	}
+
 	user := &models.User{
 		Id:       lastInsertID,
 		Username: username,
