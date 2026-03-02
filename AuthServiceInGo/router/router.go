@@ -2,6 +2,7 @@ package router
 
 import (
 	"AuthServiceInGo/controllers"
+	"AuthServiceInGo/middlewares"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,6 +18,9 @@ func SetupRouter(UserRouter Router, RoleRouter Router, PermissionRouter Router) 
 
 	// chiRouter.Use(middlewares.RequestLogger) // Middleware for logging requests
 	chiRouter.Use(middleware.Logger) // Built-in Chi middleware for logging requests
+
+	chiRouter.Use(middlewares.RateLimitMiddleware)
+	chiRouter.Use(middlewares.RequestLogger)
 
 	// chiRouter.Use(middleware.RateLimitMiddleware) // Built-in Chi middlware for logging requests
 
