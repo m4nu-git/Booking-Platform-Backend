@@ -19,12 +19,12 @@ func NewGatewayRouter() http.Handler {
 
 	// Forward requests to BookingService
 	r.With(middlewares.JWTAuthMiddleware, middlewares.RequireAnyRole("user", "admin")).HandleFunc("/bookingService/*", utils.ProxyToService(
-		"http://localhost:3005",
+		"http://localhost:3001",
 		"/bookingService",
 	))
 
 	r.With(middlewares.JWTAuthMiddleware, middlewares.RequireAnyRole("user", "admin")).HandleFunc("/reviewService/*", utils.ProxyToService(
-		"http://localhost:8081",
+		"http://localhost:4000",
 		"/reviewService",
 	))
 
