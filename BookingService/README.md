@@ -9,7 +9,7 @@ This service manages the **booking-related functionalities** of an Airbnb-style 
 ### Clone and Install
 
 ```bash
-git clone <ProjectName>
+git clone https://github.com/m4nu-git/Express-Typescript-Starter-Project.git  <ProjectName>
 cd <ProjectName>
 npm i
 ```

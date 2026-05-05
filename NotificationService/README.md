@@ -29,7 +29,7 @@
 
 ```bash
 # 1. Clone the starter template
-git clone https://github.com/singhsanket143/Express-Typescript-Starter-Project.git <ProjectName>
+git clone https://github.com/m4nu-git/Express-Typescript-Starter-Project.git  <ProjectName>
 
 # 2. Move into the project directory
 cd <ProjectName>
