@@ -14,6 +14,9 @@ type UserRepository interface {
 	GetAll() ([]*models.User, error)
 	DeleteByID(id int64) error
 	UpdateByID(id int64, user *models.User) (*models.User, error)
+	UpdateProfileByID(id int64, username, email string) error
+	UpdatePasswordByID(id int64, hashedPassword string) error
+	GetPasswordByID(id int64) (string, error)
 }
 
 type UserRepositoryImpl struct {
@@ -166,6 +169,22 @@ func (u *UserRepositoryImpl) Create(username string, email string, hashedPasswor
 	fmt.Println("User row created successfully:", user)
 
 	return user, nil
+}
+
+func (u *UserRepositoryImpl) UpdateProfileByID(id int64, username, email string) error {
+	_, err := u.db.Exec("UPDATE users SET username = ?, email = ? WHERE id = ?", username, email, id)
+	return err
+}
+
+func (u *UserRepositoryImpl) UpdatePasswordByID(id int64, hashedPassword string) error {
+	_, err := u.db.Exec("UPDATE users SET password = ? WHERE id = ?", hashedPassword, id)
+	return err
+}
+
+func (u *UserRepositoryImpl) GetPasswordByID(id int64) (string, error) {
+	var hashed string
+	err := u.db.QueryRow("SELECT password FROM users WHERE id = ?", id).Scan(&hashed)
+	return hashed, err
 }
 
 func (u *UserRepositoryImpl) GetByID(id string) (*models.User, error) {

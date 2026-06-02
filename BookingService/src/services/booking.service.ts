@@ -1,11 +1,12 @@
 import { CreateBookingDTO } from "../dto/booking.dto";
-import { confirmBooking, createBooking, createIdempotencyKey, finalizeIdempotencyKey, getIdempotencyKeyWithLock } from "../repositories/booking.repository";
+import { cancelBooking, confirmBooking, createBooking, createIdempotencyKey, finalizeIdempotencyKey, getBookingById, getBookingsByUserId, getIdempotencyKeyWithLock } from "../repositories/booking.repository";
 import { BadRequestError, InternalServerError, NotFoundError } from "../utils/errors/app.error";
 import { generateIdempotencyKey } from "../utils/generateIdempotencyKey";
 import prismaClient from '../prisma/client';
-import { getAvailableRooms, updateBookingIdToRooms } from "../api/hotel.api";
+import { getAvailableRooms, releaseRoomsForBooking, updateBookingIdToRooms } from "../api/hotel.api";
 import { serverConfig } from "../config";
 import { redlock } from "../config/redis.config";
+import { addEmailToQueue } from "../producers/email.producer";
 
 
 type AvailableRoom = {
@@ -67,6 +68,40 @@ export async function createBookingService(
     }
 }
 
+
+export async function getBookingByIdService(bookingId: number) {
+    const booking = await getBookingById(bookingId);
+    if (!booking) throw new NotFoundError('Booking not found');
+    return booking;
+}
+
+export async function getBookingsByUserIdService(userId: number) {
+    return getBookingsByUserId(userId);
+}
+
+export async function cancelBookingService(bookingId: number, userEmail?: string) {
+    const booking = await getBookingById(bookingId);
+    if (!booking) throw new NotFoundError('Booking not found');
+    if (booking.status === 'CANCELLED') throw new BadRequestError('Booking is already cancelled');
+
+    await releaseRoomsForBooking(bookingId);
+    const cancelled = await cancelBooking(bookingId);
+
+    if (userEmail) {
+        await addEmailToQueue({
+            to: userEmail,
+            subject: 'Your Booking Has Been Cancelled',
+            templateId: 'booking-cancelled',
+            params: {
+                name: userEmail.split('@')[0],
+                bookingId,
+                cancellationDate: new Date().toLocaleDateString(),
+            },
+        });
+    }
+
+    return cancelled;
+}
 
 export async function confirmBookingService(idempotencyKey: string) {
     return await prismaClient.$transaction( async (tx) => {

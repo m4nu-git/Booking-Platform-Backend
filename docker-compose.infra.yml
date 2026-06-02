@@ -1,0 +1,66 @@
+# Infrastructure-only Compose file.
+# Used during local development so services run natively (with hot-reload)
+# while Redis is managed by Docker.
+#
+# MySQL port note:
+#   The Docker MySQL is exposed on HOST port 3307 (not 3306) to avoid
+#   conflicting with any locally-installed MySQL instance.
+#   Your service .env files point to localhost:3306 (local MySQL), so
+#   native services (make dev) use your existing local MySQL automatically.
+#   The Docker MySQL on 3307 is only used by the full Docker stack (make docker-up).
+#
+# Usage:
+#   docker compose -f docker-compose.infra.yml up -d     # start
+#   docker compose -f docker-compose.infra.yml down      # stop
+#   docker compose -f docker-compose.infra.yml down -v   # stop + wipe data
+
+name: airbnb-infra
+
+services:
+
+  # ─── MySQL 8 ────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: airbnb-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_ROOT_HOST: "%"        # allow root to connect from any host
+    ports:
+      - "3307:3306"   # 3307 on host → avoids conflict with locally-installed MySQL (3306)
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  # ─── Redis 7 ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: airbnb-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  mysql-data:
+    name: airbnb-mysql-data
+  redis-data:
+    name: airbnb-redis-data

@@ -1,0 +1,26 @@
+{
+  "name": "airbnb-microservices",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Airbnb microservices monorepo — API Gateway + 4 domain services",
+  "scripts": {
+    "dev:services": "concurrently --names \"GATEWAY,HOTEL,BOOKING,NOTIF,REVIEW\" --prefix-colors \"bgBlue.bold,bgGreen.bold,bgYellow.bold,bgMagenta.bold,bgCyan.bold\" --timestamp-format \"HH:mm:ss\" --prefix \"[{name}][{time}]\" --kill-others-on-fail false \"cd AuthServiceInGo && go run main.go\" \"npm --prefix HotelService run dev\" \"npm --prefix BookingService run dev\" \"npm --prefix NotificationService run dev\" \"cd ReviewService && go run main.go\"",
+
+    "infra:up": "docker compose -f docker-compose.infra.yml up -d",
+    "infra:down": "docker compose -f docker-compose.infra.yml down",
+    "infra:logs": "docker compose -f docker-compose.infra.yml logs -f",
+
+    "dev": "npm run infra:up && npm run dev:services",
+    "stop": "npm run infra:down",
+
+    "install:all": "npm install && npm --prefix HotelService install && npm --prefix BookingService install && npm --prefix NotificationService install",
+
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:reset": "docker compose down -v && docker compose up --build -d"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

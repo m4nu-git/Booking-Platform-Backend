@@ -20,3 +20,8 @@ export const updateBookingIdToRooms = async (bookingId: number, roomIds: number[
 
     return response.data;
 }
+
+export const releaseRoomsForBooking = async (bookingId: number) => {
+    const response = await axios.delete(`${serverConfig.HOTEL_SERVICE_URL}/rooms/booking/${bookingId}`);
+    return response.data;
+}

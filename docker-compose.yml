@@ -1,0 +1,211 @@
+# Full-stack Compose file — all 5 services + MySQL + Redis in Docker.
+# Use this for staging, CI, or when you want a fully isolated environment.
+#
+# Usage:
+#   docker compose up --build -d      # start everything
+#   docker compose logs -f            # follow all logs
+#   docker compose down               # stop (keeps data)
+#   docker compose down -v            # stop + wipe data
+#
+# Sensitive values (MAIL_USER, MAIL_PASS) are read from a root .env file.
+# Copy .env.example to .env and fill in your values before running.
+
+name: airbnb
+
+services:
+
+  # ─── Infrastructure ─────────────────────────────────────────────────────────
+
+  mysql:
+    image: mysql:8.0
+    container_name: airbnb-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - airbnb-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: airbnb-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - airbnb-net
+
+  # ─── HotelService (:3000) ───────────────────────────────────────────────────
+  # Must start before BookingService and ReviewService (they call its API).
+
+  hotel-service:
+    build:
+      context: ./HotelService
+      dockerfile: Dockerfile
+    container_name: airbnb-hotel
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root1234
+      DB_NAME: airbnb_dev
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ROOM_CRON: "0 2 * * *"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - airbnb-net
+
+  # ─── BookingService (:3001) ─────────────────────────────────────────────────
+
+  booking-service:
+    build:
+      context: ./BookingService
+      dockerfile: Dockerfile
+    container_name: airbnb-booking
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: "mysql://root:root1234@mysql:3306/airbnb_booking_dev"
+      REDIS_SERVER_URL: "redis://redis:6379"
+      LOCK_TTL: 60000
+      HOTEL_SERVICE_URL: "http://hotel-service:3000/api/v1"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      hotel-service:
+        condition: service_started
+    networks:
+      - airbnb-net
+
+  # ─── NotificationService (:3002) ────────────────────────────────────────────
+
+  notification-service:
+    build:
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: airbnb-notification
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - airbnb-net
+
+  # ─── ReviewService (:4000) ──────────────────────────────────────────────────
+
+  review-service:
+    build:
+      context: ./ReviewService
+      dockerfile: Dockerfile
+    container_name: airbnb-review
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: ":4000"
+      DBName: review_dev
+      DB_ADDR: "mysql:3306"
+      DB_USER: root
+      DB_PASSWORD: root1234
+      DB_NET: tcp
+      HOTEL_SERVICE_URL: "http://hotel-service:3000/api/v1"
+      APP_MODE: dev
+    depends_on:
+      mysql:
+        condition: service_healthy
+      hotel-service:
+        condition: service_started
+    networks:
+      - airbnb-net
+
+  # ─── API Gateway / AuthService (:8080) ──────────────────────────────────────
+  # Starts last — all upstreams should be up before the gateway accepts traffic.
+
+  gateway:
+    build:
+      context: ./AuthServiceInGo
+      dockerfile: Dockerfile
+    container_name: airbnb-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: ":8080"
+      DBName: auth_dev
+      DB_ADDR: "mysql:3306"
+      DB_USER: root
+      DB_PASSWORD: root1234
+      DB_NET: tcp
+      HOTEL_SERVICE_URL: "http://hotel-service:3000"
+      BOOKING_SERVICE_URL: "http://booking-service:3001"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:3002"
+      REVIEW_SERVICE_URL: "http://review-service:4000"
+      CORS_ALLOWED_ORIGIN: "*"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      hotel-service:
+        condition: service_started
+      booking-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      review-service:
+        condition: service_started
+    networks:
+      - airbnb-net
+
+networks:
+  airbnb-net:
+    name: airbnb-network
+    driver: bridge
+
+volumes:
+  mysql-data:
+    name: airbnb-mysql-data
+  redis-data:
+    name: airbnb-redis-data

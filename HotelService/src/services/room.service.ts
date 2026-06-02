@@ -15,3 +15,7 @@ export async function updateBookingIdToRoomsService(updateBookingIdToRoomsDTO: U
     const { roomIds, bookingId } = updateBookingIdToRoomsDTO;
     return await roomRepository.updateBookingIdToRooms(roomIds, bookingId);
 }
+
+export async function releaseRoomsForBookingService(bookingId: number) {
+    return await roomRepository.deleteBookingIdFromRooms(bookingId);
+}

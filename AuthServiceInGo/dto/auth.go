@@ -33,3 +33,22 @@ type ProfileResponseDTO struct {
 	UpdatedAt string    `json:"updated_at"`
 	Roles     []RoleDTO `json:"roles"`
 }
+
+type UpdateProfileRequestDTO struct {
+	Username string `json:"username" validate:"required,min=3,max=20"`
+	Email    string `json:"email" validate:"required,email"`
+}
+
+type ChangePasswordRequestDTO struct {
+	CurrentPassword string `json:"current_password" validate:"required,min=8"`
+	NewPassword     string `json:"new_password" validate:"required,min=8"`
+}
+
+type ForgotPasswordRequestDTO struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type ResetPasswordRequestDTO struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+}

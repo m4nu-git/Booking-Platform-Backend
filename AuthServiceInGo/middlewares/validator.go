@@ -165,6 +165,70 @@ func RefreshTokenRequestValidator(next http.Handler) http.Handler {
 	})
 }
 
+func ForgotPasswordRequestValidator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload dto.ForgotPasswordRequestDTO
+		if err := utils.ReadJsonBody(r, &payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+			return
+		}
+		if err := utils.Validator.Struct(payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Validation failed", err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "payload", payload)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func ResetPasswordRequestValidator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload dto.ResetPasswordRequestDTO
+		if err := utils.ReadJsonBody(r, &payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+			return
+		}
+		if err := utils.Validator.Struct(payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Validation failed", err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "payload", payload)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func UpdateProfileRequestValidator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload dto.UpdateProfileRequestDTO
+		if err := utils.ReadJsonBody(r, &payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+			return
+		}
+		if err := utils.Validator.Struct(payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Validation failed", err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "payload", payload)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func ChangePasswordRequestValidator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var payload dto.ChangePasswordRequestDTO
+		if err := utils.ReadJsonBody(r, &payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Invalid request body", err)
+			return
+		}
+		if err := utils.Validator.Struct(payload); err != nil {
+			utils.WriteJsonErrorResponse(w, http.StatusBadRequest, "Validation failed", err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "payload", payload)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func CreatePermissionRequestValidator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var payload dto.CreatePermissionRequestDTO

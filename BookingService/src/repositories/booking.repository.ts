@@ -79,6 +79,13 @@ export async function cancelBooking(bookingId: number) {
     return booking;
 }
 
+export async function getBookingsByUserId(userId: number) {
+    return prismaClient.booking.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+    });
+}
+
 export async function finalizeIdempotencyKey(tx: Prisma.TransactionClient, key: string) {
     const idempotencyKey = await tx.idempotencyKey.update({
         where: {

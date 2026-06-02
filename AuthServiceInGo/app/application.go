@@ -5,6 +5,7 @@ import (
 	config "AuthServiceInGo/config/env"
 	"AuthServiceInGo/controllers"
 	repo "AuthServiceInGo/db/repositories"
+	"AuthServiceInGo/gateway"
 	"AuthServiceInGo/router"
 	"AuthServiceInGo/services"
 	"fmt"
@@ -49,7 +50,8 @@ func (app *Application) Run() error {
 	urr := repo.NewUserRoleRepository(db)
 	pr := repo.NewPermissionRepository(db)
 	rtr := repo.NewRefreshTokenRepository(db)
-	us := services.NewUserService(ur, rr, urr, rtr)
+	prtr := repo.NewPasswordResetTokenRepository(db)
+	us := services.NewUserService(ur, rr, urr, rtr, prtr)
 	rs := services.NewRoleService(rr, rpr, urr)
 	ps := services.NewPermissionService(pr)
 	uc := controllers.NewUserController(us)
@@ -59,11 +61,14 @@ func (app *Application) Run() error {
 	rRouter := router.NewRoleRouter(rc)
 	pRouter := router.NewPermissionRouter(pc)
 
+	mainRouter := router.SetupRouter(uRouter, rRouter, pRouter)
+	mainRouter.Mount("/", gateway.NewGatewayRouter())
+
 	server := &http.Server{
 		Addr:         app.Config.Addr,
-		Handler:      router.SetupRouter(uRouter, rRouter, pRouter),
-		ReadTimeout:  10 * time.Second,                     // Set read timeout to 10 seconds
-		WriteTimeout: 10 * time.Second,                     // Set write timeout to 10 seconds
+		Handler:      mainRouter,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second, // Increased to accommodate proxied upstream response times
 	}
 
 	fmt.Println("Starting server on", app.Config.Addr)

@@ -33,11 +33,11 @@ export const setupMailerWorker = () => {
         }
     )
 
-    emailProcessor.on("failed", () => {
-        console.error("Email processing failed");
+    emailProcessor.on("failed", (job, err) => {
+        console.error(`Email job failed [to=${job?.data?.to} template=${job?.data?.templateId}]: ${err.message}`);
     });
 
-    emailProcessor.on("completed", () => {
-        console.log("Email processing completed successfully");
+    emailProcessor.on("completed", (job) => {
+        console.log(`Email sent [to=${job?.data?.to} subject="${job?.data?.subject}"]`);
     });
 }

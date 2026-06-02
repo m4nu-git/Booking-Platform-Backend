@@ -28,7 +28,7 @@ type HotelRating struct {
 // GetHotelRating fetches the current rating and rating_count for a given hotel ID
 func (c *HotelClient) GetHotelRating(hotelID int64) (*HotelRating, error) {
 
-	url := fmt.Sprintf("%s/hotels/id/%d", c.BaseURL, hotelID)
+	url := fmt.Sprintf("%s/hotels/%d", c.BaseURL, hotelID)
 
 	fmt.Println("Fetching hotel rating from URL:", url)
 
@@ -57,7 +57,7 @@ func (c *HotelClient) GetHotelRating(hotelID int64) (*HotelRating, error) {
 
 // UpdateHotelRating updates the average rating and rating_count in the HotelService
 func (c *HotelClient) UpdateHotelRating(hotelID int64, rating float64, count int64) error {
-	url := fmt.Sprintf("%s/hotels/updateById/%d", c.BaseURL, hotelID)
+	url := fmt.Sprintf("%s/hotels/%d", c.BaseURL, hotelID)
 
 	fmt.Println("Updating hotel rating at URL:", url)
 
@@ -67,7 +67,7 @@ func (c *HotelClient) UpdateHotelRating(hotelID int64, rating float64, count int
 	}
 	body, _ := json.Marshal(payload)
 
-	req, _ := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
+	req, _ := http.NewRequest(http.MethodPatch, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HttpClient.Do(req)

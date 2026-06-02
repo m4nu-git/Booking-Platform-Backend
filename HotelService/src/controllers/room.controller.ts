@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getAvailableRoomsService, updateBookingIdToRoomsService } from "../services/room.service";
+import { getAvailableRoomsService, releaseRoomsForBookingService, updateBookingIdToRoomsService } from "../services/room.service";
 import { StatusCodes } from "http-status-codes";
 
 
@@ -22,6 +22,16 @@ export async function updateBookingIdToRoomsController(req: Request, res: Respon
     res.status(StatusCodes.OK).json({
         success: true,
         message: "Booking IDs updated to rooms table successfully",
+        data: result
+    });
+}
+
+export async function releaseRoomsController(req: Request, res: Response) {
+    const bookingId = Number(req.params.bookingId);
+    const result = await releaseRoomsForBookingService(bookingId);
+    res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Rooms released successfully",
         data: result
     });
 }

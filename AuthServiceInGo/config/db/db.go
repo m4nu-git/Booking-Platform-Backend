@@ -4,6 +4,7 @@ import (
 	env "AuthServiceInGo/config/env"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -17,6 +18,9 @@ func SetupDB() (*sql.DB, error) {
 	cfg.Net = env.GetString("DB_NET", "tcp")
 	cfg.Addr = env.GetString("DB_ADDR", "127.0.0.1:3306")
 	cfg.DBName = env.GetString("DBName", "auth_dev")
+	cfg.ParseTime = true
+	cfg.Loc = time.UTC
+	cfg.Params = map[string]string{"time_zone": "'+00:00'"}
 
 	fmt.Println("Connecting to database:", cfg.DBName, cfg.FormatDSN())
 

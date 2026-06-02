@@ -4,6 +4,7 @@ import (
 	"ReviewService/dto"
 	"ReviewService/services"
 	"ReviewService/utils"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -26,8 +27,12 @@ func (rc *ReviewController) CreateReview(w http.ResponseWriter, r *http.Request)
 	fmt.Println("Payload received:", payload)
 
 	review, err := rc.ReviewService.CreateReview(&payload)
-
 	if err != nil {
+		var svcErr *utils.ServiceError
+		if errors.As(err, &svcErr) {
+			utils.WriteJsonErrorResponse(w, svcErr.Code, svcErr.Message, err)
+			return
+		}
 		utils.WriteJsonErrorResponse(w, http.StatusInternalServerError, "Failed to create review", err)
 		return
 	}

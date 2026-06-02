@@ -47,7 +47,8 @@ func (app *Application) Run() error {
 	}
 
 	rr := repo.NewReviewRepository(db)
-	rs := services.NewReviewService(rr)
+	bookingClient := client.NewBookingClient(config.GetString("BOOKING_SERVICE_URL", "http://localhost:3001/api/v1"))
+	rs := services.NewReviewService(rr, bookingClient)
 	rc := controllers.NewReviewController(rs)
 	rRouter := router.NewReviewRouter(rc)
 

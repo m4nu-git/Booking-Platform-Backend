@@ -6,10 +6,14 @@ import (
 	"AuthServiceInGo/dto"
 	"AuthServiceInGo/models"
 	"AuthServiceInGo/utils"
+	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -23,13 +27,18 @@ type UserService interface {
 	GetUserRoles(userId int64) ([]*models.Role, error)
 	RefreshAccessToken(refreshToken string) (string, error)
 	Logout(refreshToken string) error
+	UpdateUserProfile(userId int64, payload *dto.UpdateProfileRequestDTO) (*models.User, error)
+	ChangePassword(userId int64, payload *dto.ChangePasswordRequestDTO) error
+	ForgotPassword(payload *dto.ForgotPasswordRequestDTO) error
+	ResetPassword(payload *dto.ResetPasswordRequestDTO) error
 }
 
 type UserServiceImpl struct {
-	userRepository         db.UserRepository
-	roleRepository         db.RoleRepository
-	userRoleRepository     db.UserRoleRepository
-	refreshTokenRepository db.RefreshTokenRepository
+	userRepository              db.UserRepository
+	roleRepository              db.RoleRepository
+	userRoleRepository          db.UserRoleRepository
+	refreshTokenRepository      db.RefreshTokenRepository
+	passwordResetTokenRepository db.PasswordResetTokenRepository
 }
 
 func NewUserService(
@@ -37,12 +46,14 @@ func NewUserService(
 	_roleRepository db.RoleRepository,
 	_userRoleRepository db.UserRoleRepository,
 	_refreshTokenRepository db.RefreshTokenRepository,
+	_passwordResetTokenRepository db.PasswordResetTokenRepository,
 ) UserService {
 	return &UserServiceImpl{
-		userRepository:         _userRepository,
-		roleRepository:         _roleRepository,
-		userRoleRepository:     _userRoleRepository,
-		refreshTokenRepository: _refreshTokenRepository,
+		userRepository:               _userRepository,
+		roleRepository:               _roleRepository,
+		userRoleRepository:           _userRoleRepository,
+		refreshTokenRepository:       _refreshTokenRepository,
+		passwordResetTokenRepository: _passwordResetTokenRepository,
 	}
 }
 
@@ -183,6 +194,94 @@ func (u *UserServiceImpl) RefreshAccessToken(refreshToken string) (string, error
 
 func (u *UserServiceImpl) Logout(refreshToken string) error {
 	return u.refreshTokenRepository.DeleteByToken(refreshToken)
+}
+
+func (u *UserServiceImpl) UpdateUserProfile(userId int64, payload *dto.UpdateProfileRequestDTO) (*models.User, error) {
+	if err := u.userRepository.UpdateProfileByID(userId, payload.Username, payload.Email); err != nil {
+		return nil, fmt.Errorf("failed to update profile: %w", err)
+	}
+	return u.userRepository.GetByID(fmt.Sprintf("%d", userId))
+}
+
+func (u *UserServiceImpl) ChangePassword(userId int64, payload *dto.ChangePasswordRequestDTO) error {
+	current, err := u.userRepository.GetPasswordByID(userId)
+	if err != nil {
+		return fmt.Errorf("user not found")
+	}
+	if !utils.CheckPasswordHash(payload.CurrentPassword, current) {
+		return fmt.Errorf("current password is incorrect")
+	}
+	hashed, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		return err
+	}
+	return u.userRepository.UpdatePasswordByID(userId, hashed)
+}
+
+func (u *UserServiceImpl) ForgotPassword(payload *dto.ForgotPasswordRequestDTO) error {
+	user, _ := u.userRepository.GetByEmail(payload.Email)
+	// Always return nil — never reveal whether the email exists (prevents user enumeration)
+	if user == nil {
+		return nil
+	}
+
+	// Generate a random 32-byte raw token and hash it for storage
+	rawBytes := make([]byte, 32)
+	if _, err := rand.Read(rawBytes); err != nil {
+		return err
+	}
+	rawToken := hex.EncodeToString(rawBytes)
+	hash := sha256.Sum256([]byte(rawToken))
+	tokenHash := hex.EncodeToString(hash[:])
+
+	expiresAt := time.Now().UTC().Add(30 * time.Minute)
+	if err := u.passwordResetTokenRepository.Create(user.Id, tokenHash, expiresAt); err != nil {
+		return fmt.Errorf("failed to create reset token: %w", err)
+	}
+
+	resetLink := fmt.Sprintf("http://localhost:8080/reset-password?token=%s", rawToken)
+	notifURL := env.GetString("NOTIFICATION_SERVICE_URL", "http://localhost:3002")
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"to":         payload.Email,
+		"subject":    "Reset Your Password",
+		"templateId": "password-reset",
+		"params": map[string]interface{}{
+			"name":             user.Username,
+			"resetLink":        resetLink,
+			"expiresInMinutes": 30,
+		},
+	})
+
+	resp, err := http.Post(notifURL+"/api/v1/email/send", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to send reset email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func (u *UserServiceImpl) ResetPassword(payload *dto.ResetPasswordRequestDTO) error {
+	hash := sha256.Sum256([]byte(payload.Token))
+	tokenHash := hex.EncodeToString(hash[:])
+
+	t, err := u.passwordResetTokenRepository.FindValidToken(tokenHash)
+	if err != nil {
+		return fmt.Errorf("token lookup failed: %w", err)
+	}
+	if t == nil {
+		return fmt.Errorf("invalid or expired reset token")
+	}
+
+	hashed, err := utils.HashPassword(payload.NewPassword)
+	if err != nil {
+		return err
+	}
+	if err := u.userRepository.UpdatePasswordByID(t.UserId, hashed); err != nil {
+		return err
+	}
+	return u.passwordResetTokenRepository.MarkUsed(tokenHash)
 }
 
 func generateRefreshToken() (string, error) {
