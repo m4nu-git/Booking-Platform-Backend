@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1300" height="860" viewBox="0 0 1300 860" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
+<defs>
+  <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6B7280"/></marker>
+  <marker id="ah-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#DC2626"/></marker>
+  <marker id="ah-g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#059669"/></marker>
+  <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.10)"/></filter>
+  <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="1.2" fill="#E2E8F0"/>
+  </pattern>
+</defs>
+
+<rect width="1300" height="860" fill="#F8FAFC"/>
+<rect width="1300" height="860" fill="url(#dots)"/>
+
+<!-- Title -->
+<text x="650" y="44" text-anchor="middle" font-size="24" font-weight="700" fill="#0F172A">Auth Service — Complete Flow Diagram</text>
+
+<!-- Column titles -->
+<rect x="30" y="58" width="310" height="36" rx="8" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="185" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#991B1B">Login + Refresh + Logout</text>
+
+<rect x="360" y="58" width="310" height="36" rx="8" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="515" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#5B21B6">Password Reset Flow</text>
+
+<rect x="690" y="58" width="580" height="36" rx="8" fill="#F0FDF4" stroke="#059669" stroke-width="1.5"/>
+<text x="980" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#065F46">Token Security Model</text>
+
+<!-- ═════════════════════════════════════════════════════════ -->
+<!-- COLUMN 1: Login / Refresh / Logout -->
+<!-- ═════════════════════════════════════════════════════════ -->
+
+<!-- Step 1: POST /login -->
+<rect x="50" y="112" width="270" height="54" rx="10" fill="#FEF2F2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<text x="185" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="#991B1B">POST /login</text>
+<text x="185" y="155" text-anchor="middle" font-size="11" fill="#DC2626">{ email, password }</text>
+
+<line x1="185" y1="166" x2="185" y2="188" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Middleware -->
+<rect x="75" y="190" width="220" height="42" rx="8" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+<text x="185" y="208" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">UserLoginRequestValidator</text>
+<text x="185" y="224" text-anchor="middle" font-size="10" fill="#64748B">decode body · validate fields</text>
+
+<line x1="185" y1="232" x2="185" y2="252" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Service -->
+<rect x="50" y="254" width="270" height="52" rx="10" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="185" y="275" text-anchor="middle" font-size="12" font-weight="600" fill="#991B1B">UserService.LoginUser()</text>
+<text x="185" y="293" text-anchor="middle" font-size="10" fill="#DC2626">bcrypt.compare(input, stored_hash)</text>
+
+<!-- Decision: valid? -->
+<line x1="185" y1="306" x2="185" y2="328" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+<polygon points="185,330 220,358 185,386 150,358" fill="#FEF9C3" stroke="#CA8A04" stroke-width="2"/>
+<text x="185" y="354" text-anchor="middle" font-size="11" font-weight="600" fill="#854D0E">Valid?</text>
+<text x="235" y="362" font-size="10" fill="#65A30D">YES</text>
+<text x="100" y="362" text-anchor="middle" font-size="10" fill="#DC2626">NO</text>
+
+<!-- NO path → 401 -->
+<line x1="150" y1="358" x2="60" y2="358" stroke="#DC2626" stroke-width="1.5" marker-end="url(#ah-r)"/>
+<rect x="20" y="346" width="42" height="24" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="41" y="362" text-anchor="middle" font-size="11" font-weight="700" fill="#DC2626">401</text>
+
+<!-- YES path -->
+<line x1="185" y1="386" x2="185" y2="406" stroke="#059669" stroke-width="2" marker-end="url(#ah-g)"/>
+
+<!-- Generate JWT -->
+<rect x="50" y="408" width="270" height="52" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+<text x="185" y="429" text-anchor="middle" font-size="12" font-weight="600" fill="#065F46">Generate JWT (HS256)</text>
+<text x="185" y="447" text-anchor="middle" font-size="10" fill="#059669">claims: {email, userID} · TTL: 15 min</text>
+
+<line x1="185" y1="460" x2="185" y2="480" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Refresh Token -->
+<rect x="50" y="482" width="270" height="62" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="185" y="502" text-anchor="middle" font-size="12" font-weight="600" fill="#1E40AF">Generate Refresh Token</text>
+<text x="185" y="520" text-anchor="middle" font-size="10" fill="#2563EB">random 32-byte hex · 7 day TTL</text>
+<text x="185" y="536" text-anchor="middle" font-size="10" fill="#2563EB">stored in refresh_tokens table (DB)</text>
+
+<line x1="185" y1="544" x2="185" y2="564" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Response -->
+<rect x="50" y="566" width="270" height="54" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="2"/>
+<text x="185" y="587" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">200 OK</text>
+<text x="185" y="606" text-anchor="middle" font-size="11" fill="#059669">{ access_token, refresh_token }</text>
+
+<!-- Separator -->
+<line x1="50" y1="640" x2="320" y2="640" stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="6,4"/>
+
+<!-- Refresh flow -->
+<rect x="50" y="652" width="270" height="42" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" filter="url(#sh)"/>
+<text x="185" y="670" text-anchor="middle" font-size="13" font-weight="700" fill="#1E40AF">POST /refresh</text>
+<text x="185" y="686" text-anchor="middle" font-size="10" fill="#2563EB">{ refresh_token }  →  validates DB record  →  new JWT</text>
+
+<line x1="185" y1="694" x2="185" y2="710" stroke="#6B7280" stroke-width="1.5" marker-end="url(#ah)"/>
+
+<!-- Logout flow -->
+<rect x="50" y="712" width="270" height="42" rx="10" fill="#FEF2F2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<text x="185" y="730" text-anchor="middle" font-size="13" font-weight="700" fill="#991B1B">POST /logout</text>
+<text x="185" y="746" text-anchor="middle" font-size="10" fill="#DC2626">{ refresh_token }  →  DELETE from DB  →  session killed</text>
+
+<!-- ═════════════════════════════════════════════════════════ -->
+<!-- COLUMN 2: Password Reset Flow -->
+<!-- ═════════════════════════════════════════════════════════ -->
+
+<!-- Step 1 -->
+<rect x="375" y="112" width="270" height="54" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
+<text x="510" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="#5B21B6">POST /forgot-password</text>
+<text x="510" y="155" text-anchor="middle" font-size="11" fill="#7C3AED">{ email } — always returns 200 (no leak)</text>
+
+<line x1="510" y1="166" x2="510" y2="188" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Check user -->
+<rect x="410" y="190" width="200" height="42" rx="8" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+<text x="510" y="208" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Look up user by email</text>
+<text x="510" y="224" text-anchor="middle" font-size="10" fill="#64748B">if not found → return nil silently</text>
+
+<line x1="510" y1="232" x2="510" y2="252" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Generate token -->
+<rect x="375" y="254" width="270" height="62" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="510" y="273" text-anchor="middle" font-size="12" font-weight="600" fill="#5B21B6">Generate Reset Token</text>
+<text x="510" y="291" text-anchor="middle" font-size="10" fill="#7C3AED">rawToken = crypto/rand 32 bytes (hex)</text>
+<text x="510" y="307" text-anchor="middle" font-size="10" fill="#7C3AED">tokenHash = SHA-256(rawToken) → stored in DB</text>
+
+<line x1="510" y1="316" x2="510" y2="336" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Store in DB -->
+<rect x="390" y="338" width="240" height="52" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="510" y="358" text-anchor="middle" font-size="12" font-weight="600" fill="#1E40AF">Store in password_reset_tokens</text>
+<text x="510" y="374" text-anchor="middle" font-size="10" fill="#2563EB">user_id · token_hash · expires_at (UTC+30min) · used=false</text>
+
+<line x1="510" y1="390" x2="510" y2="410" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Send email -->
+<rect x="375" y="412" width="270" height="52" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+<text x="510" y="432" text-anchor="middle" font-size="12" font-weight="600" fill="#065F46">Send via NotificationService</text>
+<text x="510" y="450" text-anchor="middle" font-size="10" fill="#059669">link: /reset-password?token=rawToken</text>
+
+<line x1="510" y1="464" x2="510" y2="484" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- User clicks link -->
+<rect x="375" y="486" width="270" height="52" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+<text x="510" y="506" text-anchor="middle" font-size="12" font-weight="600" fill="#92400E">GET /reset-password?token=xxx</text>
+<text x="510" y="524" text-anchor="middle" font-size="10" fill="#D97706">Serve HTML page · token embedded in data-token attr</text>
+
+<line x1="510" y1="538" x2="510" y2="558" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Submit new password -->
+<rect x="375" y="560" width="270" height="52" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2"/>
+<text x="510" y="580" text-anchor="middle" font-size="12" font-weight="600" fill="#5B21B6">POST /reset-password</text>
+<text x="510" y="598" text-anchor="middle" font-size="10" fill="#7C3AED">{ token: rawToken, new_password }</text>
+
+<line x1="510" y1="612" x2="510" y2="632" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Validate token -->
+<rect x="375" y="634" width="270" height="62" rx="10" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+<text x="510" y="653" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Validate Token</text>
+<text x="510" y="670" text-anchor="middle" font-size="10" fill="#475569">SHA-256(rawToken) → find in DB</text>
+<text x="510" y="686" text-anchor="middle" font-size="10" fill="#475569">check: not expired · not already used</text>
+
+<line x1="510" y1="696" x2="510" y2="716" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Update password -->
+<rect x="375" y="718" width="270" height="52" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="2"/>
+<text x="510" y="738" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">Update Password + Mark Used</text>
+<text x="510" y="756" text-anchor="middle" font-size="10" fill="#059669">bcrypt(new_password) → users table · token.used=true</text>
+
+<!-- ═════════════════════════════════════════════════════════ -->
+<!-- COLUMN 3: Security Model -->
+<!-- ═════════════════════════════════════════════════════════ -->
+
+<!-- JWT Model -->
+<rect x="700" y="112" width="560" height="175" rx="12" fill="#FEF2F2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<text x="980" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#991B1B">JWT Access Token</text>
+<text x="720" y="160" font-size="12" font-weight="600" fill="#334155">Algorithm:</text>
+<text x="820" y="160" font-size="12" fill="#DC2626">HS256 (HMAC-SHA256)</text>
+<text x="720" y="180" font-size="12" font-weight="600" fill="#334155">Claims:</text>
+<text x="820" y="180" font-size="12" fill="#DC2626">email, userID, exp (15 min)</text>
+<text x="720" y="200" font-size="12" font-weight="600" fill="#334155">Secret:</text>
+<text x="820" y="200" font-size="12" fill="#DC2626">JWT_SECRET env var</text>
+<text x="720" y="220" font-size="12" font-weight="600" fill="#334155">Validated by:</text>
+<text x="820" y="220" font-size="12" fill="#DC2626">JWTAuthMiddleware on every protected route</text>
+<text x="720" y="240" font-size="12" font-weight="600" fill="#334155">On expiry:</text>
+<text x="820" y="240" font-size="12" fill="#DC2626">Use refresh token to get new access token</text>
+<text x="720" y="260" font-size="12" font-weight="600" fill="#334155">Token leak risk:</text>
+<text x="820" y="260" font-size="12" fill="#DC2626">Max 15 min exposure — short TTL limits blast radius</text>
+<text x="720" y="280" font-size="12" fill="#64748B">Context carries: userID, email (used by proxy for X-User-ID header)</text>
+
+<!-- Refresh Token Model -->
+<rect x="700" y="308" width="560" height="150" rx="12" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" filter="url(#sh)"/>
+<text x="980" y="333" text-anchor="middle" font-size="15" font-weight="700" fill="#1E40AF">Refresh Token</text>
+<text x="720" y="355" font-size="12" font-weight="600" fill="#334155">Format:</text>
+<text x="820" y="355" font-size="12" fill="#2563EB">random 32-byte cryptographic hex string</text>
+<text x="720" y="375" font-size="12" font-weight="600" fill="#334155">Storage:</text>
+<text x="820" y="375" font-size="12" fill="#2563EB">refresh_tokens table (user_id, token, expires_at)</text>
+<text x="720" y="395" font-size="12" font-weight="600" fill="#334155">TTL:</text>
+<text x="820" y="395" font-size="12" fill="#2563EB">7 days — stored in DB, not in JWT</text>
+<text x="720" y="415" font-size="12" font-weight="600" fill="#334155">Logout:</text>
+<text x="820" y="415" font-size="12" fill="#2563EB">DELETE from DB → token permanently invalidated</text>
+<text x="720" y="435" font-size="12" fill="#64748B">True server-side logout — stateless JWT + stateful refresh</text>
+<text x="720" y="452" font-size="12" fill="#64748B">Expiry checked in Go before issuing new access token</text>
+
+<!-- Password Reset Token Model -->
+<rect x="700" y="480" width="560" height="185" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
+<text x="980" y="506" text-anchor="middle" font-size="15" font-weight="700" fill="#5B21B6">Password Reset Token</text>
+<text x="720" y="528" font-size="12" font-weight="600" fill="#334155">Raw token:</text>
+<text x="820" y="528" font-size="12" fill="#7C3AED">crypto/rand 32 bytes → hex (64 chars) — sent in email</text>
+<text x="720" y="548" font-size="12" font-weight="600" fill="#334155">Stored:</text>
+<text x="820" y="548" font-size="12" fill="#7C3AED">SHA-256(rawToken) — hash only stored in DB</text>
+<text x="720" y="568" font-size="12" font-weight="600" fill="#334155">TTL:</text>
+<text x="820" y="568" font-size="12" fill="#7C3AED">30 minutes — UTC stored, MySQL session UTC enforced</text>
+<text x="720" y="588" font-size="12" font-weight="600" fill="#334155">Single-use:</text>
+<text x="820" y="588" font-size="12" fill="#7C3AED">used=TRUE set after successful reset</text>
+<text x="720" y="608" font-size="12" font-weight="600" fill="#334155">User enum:</text>
+<text x="820" y="608" font-size="12" fill="#7C3AED">Always 200 — never reveals if email exists</text>
+<text x="720" y="628" font-size="12" font-weight="600" fill="#334155">Timezone:</text>
+<text x="820" y="628" font-size="12" fill="#7C3AED">DB: ParseTime=true, Loc=UTC, time_zone=+00:00</text>
+<text x="720" y="648" font-size="12" fill="#64748B">rawToken in URL → SHA-256 hashed → compared to stored hash</text>
+<text x="720" y="663" font-size="12" fill="#64748B">Plain token never stored — only hash (similar to bcrypt philosophy)</text>
+
+<!-- RBAC Model -->
+<rect x="700" y="686" width="560" height="140" rx="12" fill="#D1FAE5" stroke="#059669" stroke-width="2" filter="url(#sh)"/>
+<text x="980" y="710" text-anchor="middle" font-size="15" font-weight="700" fill="#065F46">RBAC — Role Based Access Control</text>
+<text x="720" y="732" font-size="12" fill="#334155">Users → user_roles → Roles → role_permissions → Permissions</text>
+<text x="720" y="752" font-size="12" fill="#064E3B">RequireAnyRole("user","admin") — any of these roles passes</text>
+<text x="720" y="770" font-size="12" fill="#064E3B">RequireAllRoles("admin")  — must have all listed roles</text>
+<text x="720" y="790" font-size="12" fill="#064E3B">Role assignment uses DB transaction (DELETE old + INSERT new atomically)</text>
+<text x="720" y="810" font-size="12" fill="#064E3B">Default role "user" assigned at signup inside UserRepository.Create()</text>
+</svg>

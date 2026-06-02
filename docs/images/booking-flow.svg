@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1300" height="860" viewBox="0 0 1300 860" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
+<defs>
+  <marker id="ah" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6B7280"/></marker>
+  <marker id="ah-r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#DC2626"/></marker>
+  <marker id="ah-g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#059669"/></marker>
+  <marker id="ah-o" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#D97706"/></marker>
+  <marker id="ah-b" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#2563EB"/></marker>
+  <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,0.10)"/></filter>
+  <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="1.2" fill="#E2E8F0"/>
+  </pattern>
+</defs>
+
+<rect width="1300" height="860" fill="#F8FAFC"/>
+<rect width="1300" height="860" fill="url(#dots)"/>
+
+<text x="650" y="44" text-anchor="middle" font-size="24" font-weight="700" fill="#0F172A">Booking Service — Lifecycle and Internal Flow</text>
+
+<!-- Column headers -->
+<rect x="30" y="58" width="440" height="36" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+<text x="250" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#92400E">Booking Creation Flow</text>
+
+<rect x="490" y="58" width="380" height="36" rx="8" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+<text x="680" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#92400E">Booking State Machine</text>
+
+<rect x="890" y="58" width="380" height="36" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+<text x="1080" y="82" text-anchor="middle" font-size="15" font-weight="700" fill="#3730A3">Internal Patterns</text>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COLUMN 1: Booking Creation Flow -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<!-- Client Request -->
+<rect x="60" y="112" width="300" height="54" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="2" filter="url(#sh)"/>
+<text x="210" y="136" text-anchor="middle" font-size="13" font-weight="700" fill="#92400E">POST /bookingService/bookings</text>
+<text x="210" y="155" text-anchor="middle" font-size="10" fill="#D97706">{ hotelId, roomId, checkIn, checkOut, guests }</text>
+<text x="210" y="168" text-anchor="middle" font-size="10" fill="#6B7280">(via API Gateway — JWT required)</text>
+
+<line x1="210" y1="178" x2="210" y2="200" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- JWT extracted -->
+<rect x="95" y="202" width="230" height="36" rx="8" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+<text x="210" y="218" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">Extract X-User-ID from header</text>
+<text x="210" y="232" text-anchor="middle" font-size="10" fill="#6B7280">injected by gateway proxy</text>
+
+<line x1="210" y1="238" x2="210" y2="258" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Acquire RedLock -->
+<rect x="60" y="260" width="300" height="64" rx="10" fill="#FEE2E2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<text x="210" y="282" text-anchor="middle" font-size="13" font-weight="700" fill="#991B1B">Acquire RedLock</text>
+<text x="210" y="299" text-anchor="middle" font-size="10" fill="#DC2626">key: "booking:room:{roomId}"</text>
+<text x="210" y="314" text-anchor="middle" font-size="10" fill="#DC2626">TTL: 60s — prevents double booking</text>
+
+<!-- Lock decision -->
+<line x1="210" y1="324" x2="210" y2="348" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+<polygon points="210,350 250,378 210,406 170,378" fill="#FEF9C3" stroke="#CA8A04" stroke-width="2"/>
+<text x="210" y="374" text-anchor="middle" font-size="11" font-weight="600" fill="#854D0E">Lock</text>
+<text x="210" y="390" text-anchor="middle" font-size="11" font-weight="600" fill="#854D0E">acquired?</text>
+<text x="258" y="382" font-size="10" fill="#059669">YES</text>
+<text x="143" y="382" text-anchor="end" font-size="10" fill="#DC2626">NO</text>
+
+<!-- NO → 409 -->
+<line x1="170" y1="378" x2="80" y2="378" stroke="#DC2626" stroke-width="1.5" marker-end="url(#ah-r)"/>
+<rect x="35" y="364" width="48" height="28" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="59" y="382" text-anchor="middle" font-size="11" font-weight="700" fill="#DC2626">409</text>
+
+<!-- YES → Check availability -->
+<line x1="210" y1="406" x2="210" y2="430" stroke="#059669" stroke-width="2" marker-end="url(#ah-g)"/>
+
+<!-- Call Hotel Service -->
+<rect x="60" y="432" width="300" height="62" rx="10" fill="#E0F2FE" stroke="#0284C7" stroke-width="2" filter="url(#sh)"/>
+<text x="210" y="452" text-anchor="middle" font-size="13" font-weight="700" fill="#0369A1">GET /hotelService/availability</text>
+<text x="210" y="469" text-anchor="middle" font-size="10" fill="#0284C7">roomId · checkIn · checkOut</text>
+<text x="210" y="484" text-anchor="middle" font-size="10" fill="#0284C7">synchronous HTTP call → HotelService :3000</text>
+
+<!-- Available decision -->
+<line x1="210" y1="494" x2="210" y2="516" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+<polygon points="210,518 250,544 210,570 170,544" fill="#FEF9C3" stroke="#CA8A04" stroke-width="2"/>
+<text x="210" y="540" text-anchor="middle" font-size="11" font-weight="600" fill="#854D0E">Room</text>
+<text x="210" y="556" text-anchor="middle" font-size="11" font-weight="600" fill="#854D0E">available?</text>
+<text x="258" y="548" font-size="10" fill="#059669">YES</text>
+<text x="143" y="548" text-anchor="end" font-size="10" fill="#DC2626">NO</text>
+
+<!-- NO → 422 -->
+<line x1="170" y1="544" x2="80" y2="544" stroke="#DC2626" stroke-width="1.5" marker-end="url(#ah-r)"/>
+<rect x="35" y="530" width="48" height="28" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="59" y="548" text-anchor="middle" font-size="11" font-weight="700" fill="#DC2626">422</text>
+
+<line x1="210" y1="570" x2="210" y2="592" stroke="#059669" stroke-width="2" marker-end="url(#ah-g)"/>
+
+<!-- Create PENDING booking -->
+<rect x="60" y="594" width="300" height="62" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+<text x="210" y="615" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">Create Booking (PENDING)</text>
+<text x="210" y="633" text-anchor="middle" font-size="10" fill="#D97706">Mark room with bookingId in HotelService</text>
+<text x="210" y="649" text-anchor="middle" font-size="10" fill="#D97706">10-min hold window starts · Release RedLock</text>
+
+<line x1="210" y1="656" x2="210" y2="676" stroke="#6B7280" stroke-width="2" marker-end="url(#ah)"/>
+
+<!-- Response -->
+<rect x="80" y="678" width="260" height="42" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="2"/>
+<text x="210" y="698" text-anchor="middle" font-size="13" font-weight="700" fill="#065F46">201 Created</text>
+<text x="210" y="714" text-anchor="middle" font-size="10" fill="#059669">{ bookingId, status: PENDING, expiresAt }</text>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COLUMN 2: State Machine -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<!-- PENDING state -->
+<rect x="540" y="112" width="280" height="76" rx="12" fill="#FEF3C7" stroke="#D97706" stroke-width="2.5" filter="url(#sh)"/>
+<text x="680" y="143" text-anchor="middle" font-size="20" font-weight="700" fill="#92400E">PENDING</text>
+<text x="680" y="165" text-anchor="middle" font-size="11" fill="#D97706">Booking created · Room held</text>
+<text x="680" y="181" text-anchor="middle" font-size="11" fill="#D97706">RedLock released · 10-min timer running</text>
+
+<!-- Three transitions from PENDING -->
+<!-- 1. Confirm -->
+<line x1="680" y1="188" x2="680" y2="310" stroke="#6B7280" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="690" y="238" width="90" height="20" rx="5" fill="#F1F5F9"/>
+<text x="735" y="252" text-anchor="middle" font-size="10" fill="#059669">User confirms</text>
+
+<!-- Idempotency check -->
+<rect x="540" y="312" width="280" height="68" rx="10" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+<text x="680" y="333" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Check IdempotencyKey</text>
+<text x="680" y="351" text-anchor="middle" font-size="10" fill="#475569">If key exists and done → return cached result</text>
+<text x="680" y="367" text-anchor="middle" font-size="10" fill="#475569">Prevents duplicate confirmations (DB + Transaction)</text>
+
+<line x1="680" y1="380" x2="680" y2="402" stroke="#6B7280" stroke-width="1.8" marker-end="url(#ah)"/>
+
+<!-- DB Transaction -->
+<rect x="540" y="404" width="280" height="80" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="680" y="425" text-anchor="middle" font-size="12" font-weight="600" fill="#1E40AF">DB Transaction</text>
+<text x="680" y="443" text-anchor="middle" font-size="10" fill="#2563EB">1. UPDATE booking SET status = CONFIRMED</text>
+<text x="680" y="460" text-anchor="middle" font-size="10" fill="#2563EB">2. INSERT/UPDATE idempotency_key SET done=true</text>
+<text x="680" y="477" text-anchor="middle" font-size="10" fill="#2563EB">3. Commit atomically — all or nothing</text>
+
+<line x1="680" y1="484" x2="680" y2="506" stroke="#059669" stroke-width="2" marker-end="url(#ah-g)"/>
+
+<!-- CONFIRMED -->
+<rect x="555" y="508" width="250" height="60" rx="12" fill="#D1FAE5" stroke="#059669" stroke-width="2.5" filter="url(#sh)"/>
+<text x="680" y="536" text-anchor="middle" font-size="20" font-weight="700" fill="#065F46">CONFIRMED</text>
+<text x="680" y="556" text-anchor="middle" font-size="11" fill="#059669">Booking is final · Room permanently reserved</text>
+
+<!-- 2. Expiry path -->
+<!-- From PENDING down-right to EXPIRED -->
+<path d="M 820 150 L 870 150 L 870 620 L 820 620" stroke="#DC2626" stroke-width="1.8" fill="none" stroke-dasharray="6,3" marker-end="url(#ah-r)"/>
+<rect x="826" y="375" width="120" height="55" rx="8" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="886" y="398" text-anchor="middle" font-size="11" font-weight="600" fill="#DC2626">Cron Job</text>
+<text x="886" y="414" text-anchor="middle" font-size="10" fill="#DC2626">every 1 min</text>
+<text x="886" y="430" text-anchor="middle" font-size="10" fill="#DC2626">checks DB</text>
+
+<!-- EXPIRED -->
+<rect x="540" y="596" width="280" height="76" rx="12" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.5" filter="url(#sh)"/>
+<text x="680" y="630" text-anchor="middle" font-size="20" font-weight="700" fill="#991B1B">EXPIRED</text>
+<text x="680" y="652" text-anchor="middle" font-size="11" fill="#DC2626">Booking not confirmed within 10 min</text>
+<text x="680" y="668" text-anchor="middle" font-size="11" fill="#DC2626">Cron marks EXPIRED · calls /release on HotelService</text>
+
+<!-- Release Room -->
+<line x1="680" y1="672" x2="680" y2="700" stroke="#DC2626" stroke-width="1.8" marker-end="url(#ah-r)"/>
+<rect x="555" y="702" width="250" height="48" rx="10" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="680" y="722" text-anchor="middle" font-size="12" font-weight="600" fill="#991B1B">Room Released</text>
+<text x="680" y="738" text-anchor="middle" font-size="10" fill="#DC2626">HotelService bookingId=null · room available again</text>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- COLUMN 3: Internal Patterns -->
+<!-- ═══════════════════════════════════════════════ -->
+
+<!-- RedLock -->
+<rect x="900" y="112" width="370" height="152" rx="12" fill="#FEE2E2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<text x="1085" y="136" text-anchor="middle" font-size="15" font-weight="700" fill="#991B1B">Redis RedLock — Distributed Locking</text>
+<text x="920" y="158" font-size="11" fill="#334155">Problem: 2 users book the same room simultaneously</text>
+<text x="920" y="176" font-size="11" fill="#334155">Lock key:  "booking:room:{roomId}"</text>
+<text x="920" y="194" font-size="11" fill="#334155">Lock TTL:  60 seconds auto-release</text>
+<text x="920" y="212" font-size="11" fill="#334155">On acquire: check + reserve atomically</text>
+<text x="920" y="230" font-size="11" fill="#334155">On fail:    409 Conflict — "room is being booked"</text>
+<text x="920" y="248" font-size="11" fill="#DC2626">Released immediately after booking row is created</text>
+
+<!-- Idempotency -->
+<rect x="900" y="282" width="370" height="160" rx="12" fill="#DBEAFE" stroke="#2563EB" stroke-width="2" filter="url(#sh)"/>
+<text x="1085" y="305" text-anchor="middle" font-size="15" font-weight="700" fill="#1E40AF">Idempotency Keys</text>
+<text x="920" y="327" font-size="11" fill="#334155">Problem: client retries /confirm → double confirmation</text>
+<text x="920" y="347" font-size="11" fill="#334155">Each confirmation carries a unique idempotency key</text>
+<text x="920" y="367" font-size="11" fill="#334155">Before processing: check if key already exists in DB</text>
+<text x="920" y="387" font-size="11" fill="#334155">If exists + done: return cached result immediately</text>
+<text x="920" y="407" font-size="11" fill="#334155">If new: process inside DB transaction + mark done</text>
+<text x="920" y="427" font-size="11" fill="#2563EB">Guarantees exactly-once booking confirmation</text>
+
+<!-- Cron Job Detail -->
+<rect x="900" y="462" width="370" height="165" rx="12" fill="#D1FAE5" stroke="#059669" stroke-width="2" filter="url(#sh)"/>
+<text x="1085" y="486" text-anchor="middle" font-size="15" font-weight="700" fill="#065F46">Cron Job — Expired Booking Cleanup</text>
+<text x="920" y="508" font-size="11" fill="#334155">Schedule:  every 1 minute</text>
+<text x="920" y="527" font-size="11" fill="#334155">Query:     SELECT * FROM bookings WHERE status=PENDING</text>
+<text x="920" y="545" font-size="11" fill="#334155">           AND createdAt &lt; NOW() - 10min</text>
+<text x="920" y="563" font-size="11" fill="#334155">Action 1:  UPDATE bookings SET status=EXPIRED</text>
+<text x="920" y="581" font-size="11" fill="#334155">Action 2:  POST /hotelService/rooms/{id}/release</text>
+<text x="920" y="599" font-size="11" fill="#334155">           clears bookingId from room record</text>
+<text x="920" y="617" font-size="11" fill="#059669">Room becomes available again for new bookings</text>
+
+<!-- Booking DB Schema -->
+<rect x="900" y="648" width="370" height="175" rx="12" fill="#FEF3C7" stroke="#D97706" stroke-width="2" filter="url(#sh)"/>
+<text x="1085" y="672" text-anchor="middle" font-size="15" font-weight="700" fill="#92400E">Database Tables</text>
+<text x="920" y="695" font-size="12" font-weight="600" fill="#334155">bookings</text>
+<text x="920" y="713" font-size="11" fill="#78350F">id · userId · hotelId · roomId · checkIn · checkOut</text>
+<text x="920" y="730" font-size="11" fill="#78350F">guestCount · status (PENDING/CONFIRMED/EXPIRED)</text>
+<text x="920" y="747" font-size="11" fill="#78350F">createdAt · confirmedAt · expiresAt</text>
+<text x="920" y="770" font-size="12" font-weight="600" fill="#334155">idempotency_keys</text>
+<text x="920" y="788" font-size="11" fill="#78350F">id · key (unique) · bookingId · status · createdAt</text>
+<text x="920" y="806" font-size="11" fill="#78350F">Prevents duplicate confirmations on client retry</text>
+</svg>

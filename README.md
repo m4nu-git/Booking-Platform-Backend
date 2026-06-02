@@ -2,41 +2,67 @@
 
 This document provides an overview of the architecture and core functionality of our Airbnb-style microservices platform.
 
+<p align="center">
+  <img src="./docs/images/architecture-overview.svg" alt="Architecture Overview" width="100%" />
+</p>
+
 ---
 
-## 1. API Gateway (Golang)
+## 1. API Gateway / Auth Service (Golang)
 
-**Role:** The API Gateway serves as the **single entry point** for all incoming client requests. It is responsible for **security enforcement, intelligent routing, and request lifecycle management**.
+**Role:** The API Gateway serves as the **single entry point** for all incoming client requests. It is responsible for **authentication, authorization, intelligent routing, password management, and request lifecycle management**.
 
 ### Key Responsibilities
 
 - **Centralized Authentication & Authorization**
   - Every inbound request must pass through the gateway before reaching any microservice.
-  - Authentication is handled via **JWT tokens**.
+  - Authentication is handled via **JWT tokens (HS256, 15-minute expiry)**.
   - **Role-Based Access Control (RBAC)** restricts route access based on user roles (`user` or `admin`), shielding internal services from unauthorized access.
 
+- **Refresh Token & Server-Side Logout**
+  - On login, a random 32-byte refresh token is issued alongside the JWT and stored in the `refresh_tokens` table (7-day expiry).
+  - `POST /refresh` validates the stored token and issues a new access token without requiring re-login.
+  - `POST /logout` deletes the refresh token from the DB — true server-side session invalidation. If the access token leaks, it expires in 15 minutes at most.
+
+- **Password Reset Flow**
+  - `POST /forgot-password` generates a single-use token (SHA-256 hashed, stored in `password_reset_tokens`, 30-minute expiry) and sends a reset link to the user's email via NotificationService. The response is always generic — the server never reveals whether the email exists (prevents user enumeration).
+  - `GET /reset-password?token=<token>` serves a self-contained **HTML password reset page** with inline CSS and JavaScript. The form is only rendered when a valid token is present in the URL.
+  - `POST /reset-password` validates the token hash, checks it is not expired or already used, updates the user's password (bcrypt), and marks the token as consumed.
+
 - **Reverse Proxy**
-  - The gateway transparently forwards requests to the appropriate downstream microservice, keeping internal service endpoints hidden from clients.
-  - Services such as BookingService, HotelService, and ReviewService are all accessed through this gateway.
+  - Transparently forwards requests to downstream microservices after stripping the service namespace prefix.
+  - Injects `X-User-ID` and `X-User-Email` headers so downstream services can apply per-user logic without re-validating the JWT.
+  - Propagates `X-Correlation-ID` for distributed tracing across all services.
+  - Gateway health check at `GET /health` pings all four downstream services in parallel and returns an aggregated status.
 
 - **Rate Limiting**
-  - To prevent abuse and promote fair usage, requests are capped at **5 per minute per IP address**.
+  - IP-based token bucket limiter applied globally — **5 requests per second per IP** (`golang.org/x/time/rate`).
+  - Supports testing via `X-Forwarded-For` header in Postman to simulate different IPs.
 
 - **Inter-Service Communication**
-  
-  The gateway supports two communication paradigms:
 
-  **I. Synchronous (Request/Response)**
-  - **REST over HTTP/HTTPS** — the approach used in this platform.
-  - **gRPC** — uses HTTP/2 with Protocol Buffers (Protobuf) for high-performance communication.
+  **I. Synchronous (REST over HTTP)**
+  - All downstream service calls use standard HTTP/HTTPS REST APIs.
 
   **II. Asynchronous (Message-Based)**
-  - **Message Queue** — uses AMQP-based brokers (e.g., RabbitMQ, AWS SQS). This platform uses **io-redis and BullMQ**.
-  - **Publish/Subscribe (Event-Driven)** — examples include Apache Kafka and Redis Pub/Sub.
+  - **Message Queue** — AMQP-based brokers (RabbitMQ / AWS SQS). This platform uses **io-redis and BullMQ**.
+  - **Publish/Subscribe** — Event-driven patterns (Apache Kafka, Redis Pub/Sub).
 
-  The gateway also handles **internal service-to-service calls**, authenticating them and aggregating data where required (e.g., merging user data from AuthService with ReviewService responses).
+> **In essence:** The gateway functions as a **security checkpoint, traffic controller, password manager, and data aggregator** for the entire microservices ecosystem.
 
-> **In essence:** The gateway functions as a **security checkpoint, traffic controller, and data aggregator** for the entire microservices ecosystem.
+### Proxy Route Mapping
+
+| Client Route | Upstream Service | Port | Auth Required |
+|---|---|---|---|
+| `/hotelService/*` | HotelService | `:3000` | user / admin |
+| `/bookingService/*` | BookingService | `:3001` | user / admin |
+| `/notificationService/*` | NotificationService | `:3002` | admin only |
+| `/reviewService/*` | ReviewService | `:4000` | user / admin |
+| `/health` | All (ping) | — | — |
+
+<p align="center">
+  <img src="./docs/images/auth-flow.svg" alt="Auth and Password Reset Flow" width="100%" />
+</p>
 
 ---
 
@@ -73,6 +99,10 @@ Confirmation uses **database transactions** to guarantee consistency:
 | `Booking` | Stores booking details — user, hotel, dates, guest count, and status. |
 | `IdempotencyKey` | Prevents duplicate processing of booking or payment operations. |
 
+<p align="center">
+  <img src="./docs/images/booking-flow.svg" alt="Booking Flow" width="100%" />
+</p>
+
 ---
 
 ## 3. Hotel Service (TypeScript)
@@ -93,7 +123,7 @@ Confirmation uses **database transactions** to guarantee consistency:
    - Scheduled cron jobs extend room availability to maintain a rolling booking window (e.g., 90 days ahead).
 
 4. **Elasticsearch Integration**
-   
+
    Elasticsearch is a distributed search and analytics engine built on Apache Lucene.
 
    - **Hotel Indexing:** When a hotel is created, its ID is queued in Redis → a worker fetches the details → transforms the data → indexes it in Elasticsearch. Create, update, and delete operations are kept in sync with MySQL.
@@ -109,6 +139,12 @@ Confirmation uses **database transactions** to guarantee consistency:
 
 - When an email needs to be sent, a job is added to a **Redis queue** containing the recipient address, email template name, and template parameters.
 - Background **worker processes** consume the queue and dispatch emails using **Nodemailer** with **Handlebars templates** for dynamic content rendering.
+
+### Email Types
+
+| Template | Trigger |
+|---|---|
+| `password-reset` | User calls `POST /forgot-password` — delivers a reset link valid for 30 minutes |
 
 ---
 
@@ -135,6 +171,9 @@ Confirmation uses **database transactions** to guarantee consistency:
 | **Redis + RedLock** | Distributed locking mechanism to handle concurrent access to shared resources. |
 | **Cron Jobs** | Scheduled background tasks for room availability extension, expired booking cleanup, and rating recalculation. |
 | **DTOs & Repositories** | Enforces a clean separation between layers for maintainable, testable code. |
+| **Password Reset Tokens** | Single-use SHA-256 hashed tokens with 30-minute expiry stored in DB, preventing token reuse and user enumeration. |
+| **UTC Timezone Enforcement** | MySQL session timezone pinned to `+00:00` on every connection; Go stores all times in UTC — prevents `expires_at > NOW()` comparison failures from timezone drift. |
+| **Correlation ID Propagation** | `X-Correlation-ID` header forwarded through all service hops for distributed trace linking. |
 
 ---
 
@@ -142,11 +181,21 @@ Confirmation uses **database transactions** to guarantee consistency:
 
 | Layer | Technology | Reason |
 |---|---|---|
-| API Gateway | Golang | High concurrency, strong typing, performance |
+| API Gateway + Auth | Golang | High concurrency, strong typing, minimal overhead |
 | Microservices | Node.js + TypeScript | Expressive, typed business logic |
-| ORM / Database | Sequelize, Prisma + SQL | Flexible data access patterns |
+| ORM / Database | Sequelize, Prisma + MySQL | Flexible data access patterns |
+| Raw DB (Auth) | `database/sql` (no ORM) | Full SQL control, no abstraction overhead |
 | Async Jobs | Redis + BullMQ | Reliable background processing and email delivery |
-| Security | JWT + RBAC | Stateless auth with fine-grained access control |
+| Search | Elasticsearch | Full-text hotel search with dynamic filters |
+| Security | JWT HS256 + RBAC | Stateless auth with fine-grained role-based access |
+| Session Management | Refresh tokens in DB | Server-side logout and token revocation |
+| Password Reset | SHA-256 hashed tokens + HTML UI | Secure, single-use, served directly from auth service |
+| Rate Limiting | `golang.org/x/time/rate` (token bucket) | 5 req/sec per IP — abuse prevention |
+| Containerization | Docker (multi-stage, Alpine) | Minimal image size, production-ready |
+
+<p align="center">
+  <img src="./docs/images/tech-stack.svg" alt="Tech Stack" width="100%" />
+</p>
 
 ---
 

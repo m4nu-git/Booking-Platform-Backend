@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1300" height="720" viewBox="0 0 1300 720" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Helvetica,Arial,sans-serif">
+<defs>
+  <filter id="sh"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.10)"/></filter>
+  <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="1.2" fill="#E2E8F0"/>
+  </pattern>
+</defs>
+
+<rect width="1300" height="720" fill="#F1F5F9"/>
+<rect width="1300" height="720" fill="url(#dots)"/>
+
+<text x="650" y="48" text-anchor="middle" font-size="26" font-weight="700" fill="#0F172A">Airbnb Platform — Technology Stack</text>
+
+<!-- ── ROW 1: Service cards ── -->
+
+<!-- API Gateway / Auth (Go) -->
+<rect x="30" y="70" width="230" height="195" rx="14" fill="#FEF2F2" stroke="#DC2626" stroke-width="2.5" filter="url(#sh)"/>
+<rect x="30" y="70" width="230" height="48" rx="14" fill="#DC2626"/>
+<rect x="30" y="102" width="230" height="16" fill="#DC2626"/>
+<text x="145" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">API Gateway + Auth</text>
+<text x="145" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">Go 1.24</text>
+<text x="145" y="162" text-anchor="middle" font-size="12" fill="#475569">go-chi/chi (router)</text>
+<text x="145" y="180" text-anchor="middle" font-size="12" fill="#475569">golang-jwt/v5</text>
+<text x="145" y="198" text-anchor="middle" font-size="12" fill="#475569">golang.org/x/time/rate</text>
+<text x="145" y="216" text-anchor="middle" font-size="12" fill="#475569">go-sql-driver/mysql</text>
+<text x="145" y="234" text-anchor="middle" font-size="12" fill="#475569">bcrypt · html/template</text>
+<text x="145" y="253" text-anchor="middle" font-size="11" fill="#6B7280">Port :8080</text>
+
+<!-- Hotel Service -->
+<rect x="280" y="70" width="230" height="195" rx="14" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.5" filter="url(#sh)"/>
+<rect x="280" y="70" width="230" height="48" rx="14" fill="#0284C7"/>
+<rect x="280" y="102" width="230" height="16" fill="#0284C7"/>
+<text x="395" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Hotel Service</text>
+<text x="395" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">TypeScript · Node.js</text>
+<text x="395" y="162" text-anchor="middle" font-size="12" fill="#475569">Express.js (router)</text>
+<text x="395" y="180" text-anchor="middle" font-size="12" fill="#475569">Sequelize ORM</text>
+<text x="395" y="198" text-anchor="middle" font-size="12" fill="#475569">BullMQ (job queues)</text>
+<text x="395" y="216" text-anchor="middle" font-size="12" fill="#475569">Elasticsearch client</text>
+<text x="395" y="234" text-anchor="middle" font-size="12" fill="#475569">ioredis · node-cron</text>
+<text x="395" y="253" text-anchor="middle" font-size="11" fill="#6B7280">Port :3000</text>
+
+<!-- Booking Service -->
+<rect x="530" y="70" width="230" height="195" rx="14" fill="#FEF3C7" stroke="#D97706" stroke-width="2.5" filter="url(#sh)"/>
+<rect x="530" y="70" width="230" height="48" rx="14" fill="#D97706"/>
+<rect x="530" y="102" width="230" height="16" fill="#D97706"/>
+<text x="645" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Booking Service</text>
+<text x="645" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">TypeScript · Node.js</text>
+<text x="645" y="162" text-anchor="middle" font-size="12" fill="#475569">Express.js (router)</text>
+<text x="645" y="180" text-anchor="middle" font-size="12" fill="#475569">Prisma ORM</text>
+<text x="645" y="198" text-anchor="middle" font-size="12" fill="#475569">redlock (distributed lock)</text>
+<text x="645" y="216" text-anchor="middle" font-size="12" fill="#475569">BullMQ · node-cron</text>
+<text x="645" y="234" text-anchor="middle" font-size="12" fill="#475569">axios (HTTP client)</text>
+<text x="645" y="253" text-anchor="middle" font-size="11" fill="#6B7280">Port :3001</text>
+
+<!-- Notification Service -->
+<rect x="780" y="70" width="230" height="195" rx="14" fill="#D1FAE5" stroke="#059669" stroke-width="2.5" filter="url(#sh)"/>
+<rect x="780" y="70" width="230" height="48" rx="14" fill="#059669"/>
+<rect x="780" y="102" width="230" height="16" fill="#059669"/>
+<text x="895" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Notification Service</text>
+<text x="895" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">TypeScript · Node.js</text>
+<text x="895" y="162" text-anchor="middle" font-size="12" fill="#475569">Express.js (router)</text>
+<text x="895" y="180" text-anchor="middle" font-size="12" fill="#475569">BullMQ (workers)</text>
+<text x="895" y="198" text-anchor="middle" font-size="12" fill="#475569">Nodemailer (SMTP)</text>
+<text x="895" y="216" text-anchor="middle" font-size="12" fill="#475569">Handlebars (templates)</text>
+<text x="895" y="234" text-anchor="middle" font-size="12" fill="#475569">ioredis</text>
+<text x="895" y="253" text-anchor="middle" font-size="11" fill="#6B7280">Port :3002</text>
+
+<!-- Review Service -->
+<rect x="1030" y="70" width="240" height="195" rx="14" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2.5" filter="url(#sh)"/>
+<rect x="1030" y="70" width="240" height="48" rx="14" fill="#4F46E5"/>
+<rect x="1030" y="102" width="240" height="16" fill="#4F46E5"/>
+<text x="1150" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Review Service</text>
+<text x="1150" y="142" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">Go</text>
+<text x="1150" y="162" text-anchor="middle" font-size="12" fill="#475569">go-chi/chi (router)</text>
+<text x="1150" y="180" text-anchor="middle" font-size="12" fill="#475569">database/sql (raw)</text>
+<text x="1150" y="198" text-anchor="middle" font-size="12" fill="#475569">go-sql-driver/mysql</text>
+<text x="1150" y="216" text-anchor="middle" font-size="12" fill="#475569">net/http (HTTP client)</text>
+<text x="1150" y="234" text-anchor="middle" font-size="12" fill="#475569">cron (rating aggregation)</text>
+<text x="1150" y="253" text-anchor="middle" font-size="11" fill="#6B7280">Port :4000</text>
+
+<!-- ── ROW 2: Infrastructure cards ── -->
+
+<!-- MySQL -->
+<rect x="30" y="290" width="220" height="165" rx="14" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="2" filter="url(#sh)"/>
+<rect x="30" y="290" width="220" height="44" rx="14" fill="#1D4ED8"/>
+<rect x="30" y="318" width="220" height="16" fill="#1D4ED8"/>
+<text x="140" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">MySQL</text>
+<text x="140" y="355" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Relational Database</text>
+<text x="140" y="374" text-anchor="middle" font-size="11" fill="#475569">auth_dev — users, roles, tokens</text>
+<text x="140" y="392" text-anchor="middle" font-size="11" fill="#475569">hotel_db — hotels, rooms</text>
+<text x="140" y="410" text-anchor="middle" font-size="11" fill="#475569">booking_db — bookings, idempotency</text>
+<text x="140" y="428" text-anchor="middle" font-size="11" fill="#475569">review_db — reviews, ratings</text>
+<text x="140" y="446" text-anchor="middle" font-size="10" fill="#6B7280">goose migrations (Auth) · Sequelize/Prisma</text>
+
+<!-- Redis -->
+<rect x="270" y="290" width="220" height="165" rx="14" fill="#FEE2E2" stroke="#DC2626" stroke-width="2" filter="url(#sh)"/>
+<rect x="270" y="290" width="220" height="44" rx="14" fill="#DC2626"/>
+<rect x="270" y="318" width="220" height="16" fill="#DC2626"/>
+<text x="380" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Redis</text>
+<text x="380" y="355" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">In-Memory + Broker</text>
+<text x="380" y="374" text-anchor="middle" font-size="11" fill="#475569">BullMQ job queues (email, rooms)</text>
+<text x="380" y="392" text-anchor="middle" font-size="11" fill="#475569">RedLock distributed locking</text>
+<text x="380" y="410" text-anchor="middle" font-size="11" fill="#475569">Room generation workers</text>
+<text x="380" y="428" text-anchor="middle" font-size="11" fill="#475569">Notification queue processing</text>
+<text x="380" y="446" text-anchor="middle" font-size="10" fill="#6B7280">ioredis client · BullMQ framework</text>
+
+<!-- Elasticsearch -->
+<rect x="510" y="290" width="220" height="165" rx="14" fill="#FEF3C7" stroke="#B45309" stroke-width="2" filter="url(#sh)"/>
+<rect x="510" y="290" width="220" height="44" rx="14" fill="#B45309"/>
+<rect x="510" y="318" width="220" height="16" fill="#B45309"/>
+<text x="620" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Elasticsearch</text>
+<text x="620" y="355" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Search Engine (Hotel)</text>
+<text x="620" y="374" text-anchor="middle" font-size="11" fill="#475569">Full-text hotel search</text>
+<text x="620" y="392" text-anchor="middle" font-size="11" fill="#475569">Dynamic filter queries</text>
+<text x="620" y="410" text-anchor="middle" font-size="11" fill="#475569">Synced on hotel CRUD via queue</text>
+<text x="620" y="428" text-anchor="middle" font-size="11" fill="#475569">Worker: fetch → transform → index</text>
+<text x="620" y="446" text-anchor="middle" font-size="10" fill="#6B7280">Apache Lucene · distributed · scalable</text>
+
+<!-- Docker -->
+<rect x="750" y="290" width="220" height="165" rx="14" fill="#E0F2FE" stroke="#0369A1" stroke-width="2" filter="url(#sh)"/>
+<rect x="750" y="290" width="220" height="44" rx="14" fill="#0369A1"/>
+<rect x="750" y="318" width="220" height="16" fill="#0369A1"/>
+<text x="860" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Docker</text>
+<text x="860" y="355" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Containerization</text>
+<text x="860" y="374" text-anchor="middle" font-size="11" fill="#475569">Multi-stage builds (Alpine)</text>
+<text x="860" y="392" text-anchor="middle" font-size="11" fill="#475569">docker-compose.yml (app stack)</text>
+<text x="860" y="410" text-anchor="middle" font-size="11" fill="#475569">docker-compose.infra.yml (DBs)</text>
+<text x="860" y="428" text-anchor="middle" font-size="11" fill="#475569">Go binary: CGO_ENABLED=0</text>
+<text x="860" y="446" text-anchor="middle" font-size="10" fill="#6B7280">ca-certs + tzdata in Alpine image</text>
+
+<!-- Security -->
+<rect x="990" y="290" width="280" height="165" rx="14" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
+<rect x="990" y="290" width="280" height="44" rx="14" fill="#7C3AED"/>
+<rect x="990" y="318" width="280" height="16" fill="#7C3AED"/>
+<text x="1130" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">Security Layer</text>
+<text x="1130" y="355" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Auth Patterns</text>
+<text x="1010" y="374" font-size="11" fill="#475569">JWT HS256 — 15 min access token</text>
+<text x="1010" y="392" font-size="11" fill="#475569">Refresh token — 7 day, DB-stored</text>
+<text x="1010" y="410" font-size="11" fill="#475569">bcrypt — password hashing</text>
+<text x="1010" y="428" font-size="11" fill="#475569">SHA-256 — reset token hashing</text>
+<text x="1010" y="446" font-size="11" fill="#475569">Rate limit: 5 req/s per IP (token bucket)</text>
+
+<!-- ── ROW 3: Cross-cutting patterns ── -->
+<rect x="30" y="480" width="1240" height="210" rx="14" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#sh)"/>
+<text x="650" y="508" text-anchor="middle" font-size="16" font-weight="700" fill="#0F172A">Cross-Cutting Concerns</text>
+
+<!-- 6 concept boxes in a row -->
+<!-- Idempotency -->
+<rect x="50" y="520" width="185" height="150" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.5"/>
+<text x="142" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#1E40AF">Idempotency</text>
+<text x="60" y="564" font-size="10" fill="#334155">Unique key per operation</text>
+<text x="60" y="581" font-size="10" fill="#334155">Prevents duplicate confirms</text>
+<text x="60" y="598" font-size="10" fill="#334155">Cached response on retry</text>
+<text x="60" y="615" font-size="10" fill="#334155">DB-backed (idempotency_keys)</text>
+<text x="60" y="632" font-size="10" fill="#334155">Critical for payment flows</text>
+<text x="60" y="652" font-size="10" fill="#6B7280">BookingService</text>
+
+<!-- DB Transactions -->
+<rect x="248" y="520" width="185" height="150" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.5"/>
+<text x="340" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">DB Transactions</text>
+<text x="260" y="564" font-size="10" fill="#334155">All-or-nothing operations</text>
+<text x="260" y="581" font-size="10" fill="#334155">Role assignment (DELETE+INSERT)</text>
+<text x="260" y="598" font-size="10" fill="#334155">Booking confirmation flow</text>
+<text x="260" y="615" font-size="10" fill="#334155">Prevents partial state writes</text>
+<text x="260" y="632" font-size="10" fill="#334155">ACID guarantees</text>
+<text x="260" y="652" font-size="10" fill="#6B7280">Auth + Booking</text>
+
+<!-- RBAC -->
+<rect x="446" y="520" width="185" height="150" rx="10" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+<text x="538" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">RBAC</text>
+<text x="458" y="564" font-size="10" fill="#334155">Users → Roles → Permissions</text>
+<text x="458" y="581" font-size="10" fill="#334155">RequireAnyRole(user,admin)</text>
+<text x="458" y="598" font-size="10" fill="#334155">RequireAllRoles(admin)</text>
+<text x="458" y="615" font-size="10" fill="#334155">Default role at signup</text>
+<text x="458" y="632" font-size="10" fill="#334155">Admin assigns roles via API</text>
+<text x="458" y="652" font-size="10" fill="#6B7280">Auth Gateway</text>
+
+<!-- Async Queue -->
+<rect x="644" y="520" width="185" height="150" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+<text x="736" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">Async Queues</text>
+<text x="656" y="564" font-size="10" fill="#334155">BullMQ on Redis</text>
+<text x="656" y="581" font-size="10" fill="#334155">Email jobs (password reset)</text>
+<text x="656" y="598" font-size="10" fill="#334155">Room generation workers</text>
+<text x="656" y="615" font-size="10" fill="#334155">Hotel ES indexing pipeline</text>
+<text x="656" y="632" font-size="10" fill="#334155">Retry on failure built-in</text>
+<text x="656" y="652" font-size="10" fill="#6B7280">Hotel + Notification</text>
+
+<!-- Cron Jobs -->
+<rect x="842" y="520" width="185" height="150" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.5"/>
+<text x="934" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#5B21B6">Cron Jobs</text>
+<text x="854" y="564" font-size="10" fill="#334155">Expired booking cleanup</text>
+<text x="854" y="581" font-size="10" fill="#334155">Room availability rolling window</text>
+<text x="854" y="598" font-size="10" fill="#334155">Rating aggregation (ReviewSvc)</text>
+<text x="854" y="615" font-size="10" fill="#334155">Runs every 1 min (booking)</text>
+<text x="854" y="632" font-size="10" fill="#334155">node-cron / Go cron</text>
+<text x="854" y="652" font-size="10" fill="#6B7280">Booking + Hotel + Review</text>
+
+<!-- Observability -->
+<rect x="1040" y="520" width="210" height="150" rx="10" fill="#F0FDF4" stroke="#059669" stroke-width="1.5"/>
+<text x="1145" y="544" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">Observability</text>
+<text x="1052" y="564" font-size="10" fill="#334155">X-Correlation-ID forwarding</text>
+<text x="1052" y="581" font-size="10" fill="#334155">RequestLogger middleware (Go)</text>
+<text x="1052" y="598" font-size="10" fill="#334155">Chi middleware.Logger</text>
+<text x="1052" y="615" font-size="10" fill="#334155">Proxy error envelope (JSON)</text>
+<text x="1052" y="632" font-size="10" fill="#334155">Gateway /health aggregator</text>
+<text x="1052" y="652" font-size="10" fill="#6B7280">All services</text>
+</svg>
