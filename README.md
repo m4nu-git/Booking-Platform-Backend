@@ -1,4 +1,4 @@
-# Airbnb Microservices – Platform Architecture Overview
+# Booking Platform Microservices – Platform Architecture Overview
 
 This document provides an overview of the architecture and core functionality of our Airbnb-style microservices platform.
 
