@@ -19,7 +19,7 @@
 <rect width="1400" height="840" fill="url(#dots)"/>
 
 <!-- Title -->
-<text x="700" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#0F172A">Airbnb Platform — Architecture Overview</text>
+<text x="700" y="44" text-anchor="middle" font-size="26" font-weight="700" fill="#0F172A">Booking Platform — Architecture Overview</text>
 
 <!-- ── CLIENT ── -->
 <rect x="520" y="60" width="360" height="68" rx="14" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2" filter="url(#sh)"/>
